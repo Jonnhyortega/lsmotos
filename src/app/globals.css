@@ -1,0 +1,48 @@
+/* Force Rebuild */
+
+@import "tailwindcss";
+
+@theme {
+  --font-imax: var(--font-imax);
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  
+  --color-ls-dark: #232323;
+  --color-ls-light: #F4F4F4;
+  --color-ls-accent: #00CEFE;
+}
+
+/* Custom Base Styles */
+body {
+  background-color: var(--color-ls-dark);
+  color: var(--color-ls-light);
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-imax), sans-serif;
+  letter-spacing: 0.05em; /* Cinematic wide feel */
+}
+
+p, span, button, li, input, textarea, label {
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-ls-accent);
+  border-radius: 5px;
+  border: 2px solid #111;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #33d9ff;
+}
