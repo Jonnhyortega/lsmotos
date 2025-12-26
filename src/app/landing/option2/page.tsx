@@ -10,6 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useState, useEffect } from "react";
 import { Footer } from "@/components/landing/Footer";
+import { logos } from "@/constants/logos";
 
 export default function Option2Page() {
   const { content } = useLanguage();
@@ -96,10 +97,11 @@ export default function Option2Page() {
                     >
                         {/* Logo in Menu */}
                         <div className="w-40 mb-4">
-                             <img 
-                                src="https://res.cloudinary.com/do87isqjr/image/upload/v1766579785/Captura_de_pantalla_2025-12-24_001630-removebg-preview_gbkkjk.png" 
+                             <Image
+                                src={logos.whiteLogo}
                                 alt="LS Motos Logo"
-                                className="w-full h-auto"
+                                width={100}
+                                height={100}
                             />
                         </div>
                         

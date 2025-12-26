@@ -1,8 +1,45 @@
+
+"use client";
+
 import Link from "next/link";
-import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, ArrowRight } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, ArrowRight, Check, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
+import { logos } from "@/constants/logos";
 
 export const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  const handleSubscribe = async () => {
+    if (!email) return;
+    setStatus("loading");
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          type: 'Newsletter'
+        })
+      });
+
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+        setTimeout(() => setStatus("idle"), 3000);
+      } else {
+        setStatus("error");
+        setTimeout(() => setStatus("idle"), 3000);
+      }
+    } catch (error) {
+      console.error(error);
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
+  };
+
   return (
     <footer className="bg-[#050505] text-white border-t border-white/10 pt-16 pb-8 font-sans">
       <div className="container mx-auto px-4">
@@ -11,7 +48,7 @@ export const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-4">
             <Link href="/" className="inline-block mb-6">
-                <Image src="/images/LOGO1.png" alt="Logo" width={200} height={200} />
+                <Image src={logos.whiteLogo} alt="Logo" width={200} height={200} />
             </Link>
             <p className="text-gray-400 leading-relaxed mb-6 max-w-sm">
               Potenciamos tu negocio con la red de distribución más sólida del país. Calidad, respaldo y rentabilidad para tu taller o concesionaria.
@@ -69,11 +106,27 @@ export const Footer = () => {
                 <div className="flex gap-2">
                     <input 
                         type="email" 
-                        placeholder="Tu email..." 
-                        className="bg-[#111] border border-white/10 rounded-md px-4 py-2 w-full text-sm focus:outline-none focus:border-ls-accent transition-colors"
+                        placeholder={status === "success" ? "¡Suscrito!" : "Tu email..."}
+                        className={`bg-[#111] border rounded-md px-4 py-2 w-full text-sm focus:outline-none transition-colors ${
+                          status === "error" ? "border-red-500" : "border-white/10 focus:border-ls-accent"
+                        }`}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={status === "loading" || status === "success"}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
                     />
-                    <button className="bg-ls-accent text-ls-dark p-2 rounded-md hover:bg-white transition-colors">
-                        <ArrowRight size={18} />
+                    <button 
+                      onClick={handleSubscribe}
+                      disabled={status === "loading" || status === "success" || !email}
+                      className="bg-ls-accent text-ls-dark p-2 rounded-md hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {status === "loading" ? (
+                          <Loader2 size={18} className="animate-spin" />
+                        ) : status === "success" ? (
+                          <Check size={18} />
+                        ) : (
+                          <ArrowRight size={18} />
+                        )}
                     </button>
                 </div>
             </div>
@@ -94,7 +147,7 @@ export const Footer = () => {
 };
 
 // Helper Components
-const SocialLink = ({ href, icon }) => (
+const SocialLink = ({ href, icon }: { href: string; icon: React.ReactNode }) => (
   <a 
     href={href} 
     className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-ls-accent hover:text-ls-dark transition-all duration-300 transform hover:scale-110"
@@ -103,7 +156,7 @@ const SocialLink = ({ href, icon }) => (
   </a>
 );
 
-const FooterLink = ({ href, children }) => (
+const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <li>
     <Link 
       href={href} 

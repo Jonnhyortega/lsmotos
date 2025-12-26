@@ -22,8 +22,31 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("submitting");
-    // Simulate API call
-    setTimeout(() => setStatus("success"), 1500);
+    
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          type: 'Distributor' // Explicitly marking these as potential distributors
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus("success");
+      } else {
+        console.error(data.error);
+        setStatus("error");
+        // Optional: Reset status after a few seconds
+        setTimeout(() => setStatus("idle"), 3000);
+      }
+    } catch (error) {
+      console.error("Submission failed", error);
+      setStatus("error");
+    }
   };
 
   const inputClasses = 
