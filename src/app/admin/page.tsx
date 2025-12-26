@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { 
   Search, 
@@ -11,9 +12,17 @@ import {
   CheckSquare, 
   Square,
   Send,
-  MoreHorizontal
+  MoreHorizontal,
+  Settings,
+  Eye,
+  EyeOff,
+  Lock,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Overlay } from '@/components/ui/Overlay';
+import { logos } from '@/constants/logos';
 
 // Types
 interface Customer {
@@ -27,16 +36,55 @@ interface Customer {
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [adminPassword, setAdminPassword] = useState('admin123'); // Dynamic internal state
+  const [adminEmail, setAdminEmail] = useState('No hay correo configurado'); // Dynamic internal state
   
+  // Persistence Load
+  useEffect(() => {
+    // 1. Load Session
+    const sessionLocal = localStorage.getItem('ls_admin_session');
+    const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('ls_admin_session='));
+    
+    if (sessionLocal === 'true' || sessionCookie) {
+        setIsAuthenticated(true);
+    }
+
+    // 2. Load Config
+    const storedPwd = localStorage.getItem('ls_admin_pwd');
+    const storedEmail = localStorage.getItem('ls_admin_email');
+
+    if (storedPwd) setAdminPassword(storedPwd);
+    if (storedEmail) setAdminEmail(storedEmail);
+  }, []);
+
   // Login Simulator
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') { // Simple mock password
+    if (loginPassword === adminPassword) {
       setIsAuthenticated(true);
+      // Save Session
+      localStorage.setItem('ls_admin_session', 'true');
+      document.cookie = "ls_admin_session=true; path=/; max-age=86400; SameSite=Strict"; // 1 day
     } else {
-      alert('Contraseña incorrecta (Test: admin123)');
+      alert('Contraseña incorrecta');
     }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('ls_admin_session');
+    document.cookie = "ls_admin_session=; path=/; max-age=0";
+  };
+
+  const persistPassword = (newPwd: string) => {
+      setAdminPassword(newPwd);
+      localStorage.setItem('ls_admin_pwd', newPwd);
+  };
+
+  const persistEmail = (newEmail: string) => {
+      setAdminEmail(newEmail);
+      localStorage.setItem('ls_admin_email', newEmail);
   };
 
   if (!isAuthenticated) {
@@ -52,28 +100,54 @@ export default function AdminPage() {
               type="password" 
               placeholder="Contraseña" 
               className="w-full p-4 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-ls-accent transition-colors"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
             />
           </div>
-          <Button type="button" onClick={handleLogin} className="w-full">
+          <Button type="submit" className="w-full">
             INGRESAR
           </Button>
-          <p className="text-xs text-center text-gray-500 mt-4">Contraseña demo: admin123</p>
+          <p className="text-xs text-center text-gray-500 mt-4">Contraseña actual: {adminPassword}</p>
         </form>
       </div>
     );
   }
 
-  return <Dashboard />;
+  return <Dashboard 
+            adminPassword={adminPassword} 
+            adminEmail={adminEmail}
+            onPasswordChange={persistPassword} 
+            onEmailChange={persistEmail}
+            onLogout={handleLogout} 
+          />;
 }
 
-function Dashboard() {
+interface DashboardProps {
+    adminPassword: string;
+    adminEmail: string;
+    onPasswordChange: (newPwd: string) => void;
+    onEmailChange: (newEmail: string) => void;
+    onLogout: () => void;
+}
+
+function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange, onLogout }: DashboardProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'All' | 'Distributor' | 'Newsletter'>('All');
   const [showMailModal, setShowMailModal] = useState(false);
+
+  // Settings Modal State
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  // Password State
+  const [pwdFormData, setPwdFormData] = useState({ current: '', new: '', confirm: '' });
+  const [pwdVisibility, setPwdVisibility] = useState({ current: false, new: false, confirm: false });
+  const [pwdStatus, setPwdStatus] = useState<{ type: 'error' | 'success' | null, msg: string }>({ type: null, msg: '' });
+
+  // Email State
+  const [emailForm, setEmailForm] = useState(adminEmail);
+  const [emailStatus, setEmailStatus] = useState<{ type: 'error' | 'success' | null, msg: string }>({ type: null, msg: '' });
 
   // Fetch Data
   useEffect(() => {
@@ -129,12 +203,71 @@ function Dashboard() {
     window.location.href = `mailto:?bcc=${bccList}&subject=Información%20Motos%20LS`;
   };
 
+  // Password Change Logic
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdStatus({ type: null, msg: '' });
+
+    // 1. Check current password
+    if (pwdFormData.current !== adminPassword) {
+        setPwdStatus({ type: 'error', msg: 'La contraseña actual es incorrecta.' });
+        return;
+    }
+
+    // 2. Validate complexity
+    // 1 uppercase, 1 special char, 8-16 chars
+    const complexityRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,16}$/;
+    if (!complexityRegex.test(pwdFormData.new)) {
+        setPwdStatus({ 
+            type: 'error', 
+            msg: 'La contraseña debe tener entre 8-16 caracteres, 1 mayúscula y 1 carácter especial.' 
+        });
+        return;
+    }
+
+    // 3. Match new and confirm
+    if (pwdFormData.new !== pwdFormData.confirm) {
+        setPwdStatus({ type: 'error', msg: 'Las contraseñas nuevas no coinciden.' });
+        return;
+    }
+
+    // Success
+    onPasswordChange(pwdFormData.new);
+    setPwdStatus({ type: 'success', msg: '¡Contraseña actualizada correctamente!' });
+    
+    // Reset form
+    setTimeout(() => {
+        setShowSettingsModal(false);
+        setPwdFormData({ current: '', new: '', confirm: '' });
+        setPwdStatus({ type: null, msg: '' });
+    }, 2000);
+  };
+
+  const handleEmailChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailStatus({ type: null, msg: '' });
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailForm)) {
+        setEmailStatus({ type: 'error', msg: 'Formato de correo inválido.' });
+        return;
+    }
+
+    onEmailChange(emailForm);
+    setEmailStatus({ type: 'success', msg: 'Correo actualizado correctamente.' });
+  };
+
+  const toggleVisibility = (field: 'current' | 'new' | 'confirm') => {
+      setPwdVisibility(prev => ({ ...prev, [field]: !prev[field] }));
+  }
+
   return (
     <div className="min-h-screen bg-ls-dark text-ls-light p-6 md:p-10 font-sans">
       
       {/* HEADER */}
       <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-        <div>
+        <div className='flex gap-4'>
+          <Image src={logos.whiteLogo} className="m-auto drop-shadow-2xl-[10px_10px_10px_rgba(255,0,0,0.5)]" alt="Logo" width={100} height={100} />
           <h1 className="text-4xl md:text-5xl font-bold tracking-widest text-white mb-2" style={{ fontFamily: 'var(--font-imax)' }}>
             DASHBOARD <span className="text-ls-accent">LEADS</span>
           </h1>
@@ -143,9 +276,15 @@ function Dashboard() {
         <div className="flex items-center gap-4">
           <div className="bg-white/5 rounded-full px-4 py-2 flex items-center gap-2 border border-white/10">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-sm font-medium">Admin Activo</span>
+            <span className="text-sm font-medium hidden sm:inline">Admin Activo</span>
+            <span className="text-xs text-white/40 border-l border-white/10 pl-2 ml-2">{adminEmail}</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+          
+          <Button variant="ghost" size="sm" onClick={() => setShowSettingsModal(true)} title="Configuración" className="hover:bg-ls-accent hover:text-ls-dark transition-colors">
+            <Settings className="w-5 h-5" />
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={onLogout} title="Cerrar Sesión">
             <LogOut className="w-5 h-5" />
           </Button>
         </div>
@@ -301,14 +440,9 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* MAIL MODAL (Simple Overlay) */}
+      {/* MAIL MODAL */}
       {showMailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#1A1A1A] border border-white/10 rounded-xl w-full max-w-lg p-6 shadow-2xl">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Mail className="w-5 h-5 text-ls-accent" />
-              Redactar Correo Masivo
-            </h3>
+        <Overlay isOpen={showMailModal} onClose={() => setShowMailModal(false)} title="Redactar Correo Masivo">
             <p className="text-sm text-white/60 mb-6">
               Enviando a <strong>{selectedIds.length}</strong> destinatarios seleccionados.
             </p>
@@ -316,11 +450,11 @@ function Dashboard() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-white/40 mb-1 uppercase">Asunto</label>
-                <input type="text" className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none" placeholder="Novedades Motos LS..." />
+                <input type="text" className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none font-mono text-sm" placeholder="Novedades Motos LS..." />
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/40 mb-1 uppercase">Mensaje</label>
-                <textarea rows={4} className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none" placeholder="Escribe tu mensaje aquí..."></textarea>
+                <textarea rows={4} className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none font-mono text-sm" placeholder="Escribe tu mensaje aquí..."></textarea>
               </div>
             </div>
 
@@ -330,10 +464,126 @@ function Dashboard() {
                 Enviar Ahora
               </Button>
             </div>
-          </div>
-        </div>
+        </Overlay>
       )}
+
+      {/* SETTINGS MODAL */}
+      <Overlay isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} title="Configuración de Cuenta">
+        <div className="space-y-8">
+            
+            {/* Email Section */}
+            <section>
+                <h4 className="flex items-center gap-2 text-white font-bold mb-4 border-b border-white/10 pb-2">
+                    <Mail size={18} className="text-ls-accent" /> Correo Electrónico
+                </h4>
+                <form onSubmit={handleEmailChange} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-white/40 mb-1 uppercase">Email de Administrador</label>
+                        <div className="flex gap-2">
+                            <input 
+                                type="email" 
+                                className="flex-1 bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none font-mono text-sm"
+                                value={emailForm}
+                                onChange={(e) => setEmailForm(e.target.value)}
+                            />
+                            <Button type="submit" size="sm" variant="secondary">Guardar</Button>
+                        </div>
+                    </div>
+                    {emailStatus.msg && (
+                        <div className={`p-2 rounded text-xs flex items-center gap-2 ${emailStatus.type === 'error' ? 'text-red-400' : 'text-green-400'}`}>
+                            {emailStatus.type === 'error' ? <AlertCircle size={14} /> : <Check size={14} />}
+                            {emailStatus.msg}
+                        </div>
+                    )}
+                </form>
+            </section>
+
+            {/* Password Section */}
+            <section>
+                <h4 className="flex items-center gap-2 text-white font-bold mb-4 border-b border-white/10 pb-2">
+                     <Settings size={18} className="text-ls-accent" /> Seguridad
+                </h4>
+                
+                <form onSubmit={handlePasswordChange} className="space-y-6">
+                    <div className="bg-ls-accent/5 p-4 rounded-lg border border-ls-accent/10 mb-6">
+                        <h4 className="flex items-center gap-2 text-ls-accent text-sm font-bold mb-2">
+                            <AlertCircle size={16} /> Requisitos de contraseña
+                        </h4>
+                        <ul className="text-xs text-white/60 space-y-1 ml-6 list-disc">
+                            <li>Entre 8 y 16 caracteres.</li>
+                            <li>Al menos 1 mayúscula.</li>
+                            <li>Al menos 1 carácter especial (!@#$%...).</li>
+                        </ul>
+                    </div>
+
+                    {/* Current Password */}
+                    <div className="relative">
+                        <label className="block text-xs font-bold text-white/40 mb-1 uppercase">Contraseña Actual</label>
+                        <div className="relative">
+                            <input 
+                                type={pwdVisibility.current ? "text" : "password"}
+                                className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none font-mono text-sm pr-10"
+                                value={pwdFormData.current}
+                                onChange={(e) => setPwdFormData({...pwdFormData, current: e.target.value})}
+                            />
+                            <button type="button" onClick={() => toggleVisibility('current')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white">
+                                {pwdVisibility.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* New Password */}
+                        <div className="relative">
+                            <label className="block text-xs font-bold text-white/40 mb-1 uppercase">Nueva</label>
+                            <div className="relative">
+                                <input 
+                                    type={pwdVisibility.new ? "text" : "password"}
+                                    className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none font-mono text-sm pr-10"
+                                    value={pwdFormData.new}
+                                    onChange={(e) => setPwdFormData({...pwdFormData, new: e.target.value})}
+                                />
+                                <button type="button" onClick={() => toggleVisibility('new')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white">
+                                    {pwdVisibility.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Confirm Password */}
+                        <div className="relative">
+                            <label className="block text-xs font-bold text-white/40 mb-1 uppercase">Confirmar</label>
+                            <div className="relative">
+                                <input 
+                                    type={pwdVisibility.confirm ? "text" : "password"}
+                                    className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none font-mono text-sm pr-10"
+                                    value={pwdFormData.confirm}
+                                    onChange={(e) => setPwdFormData({...pwdFormData, confirm: e.target.value})}
+                                />
+                                <button type="button" onClick={() => toggleVisibility('confirm')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white">
+                                    {pwdVisibility.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Status Message */}
+                    {pwdStatus.msg && (
+                        <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${pwdStatus.type === 'error' ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                            {pwdStatus.type === 'error' ? <AlertCircle size={16} /> : <Check size={16} />}
+                            {pwdStatus.msg}
+                        </div>
+                    )}
+
+                    <div className="flex justify-end pt-2">
+                        <Button type="submit" variant="primary" size="sm">Actualizar Contraseña</Button>
+                    </div>
+                </form>
+            </section>
+        </div>
+      </Overlay>
 
     </div>
   );
 }
+
+

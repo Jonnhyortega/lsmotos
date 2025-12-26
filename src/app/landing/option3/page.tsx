@@ -27,13 +27,13 @@ export default function Option3Page() {
   }, [isMobileMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-ls-accent selection:text-black">
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-ls-accent selection:text-black p-4">
       
       {/* 1. Navbar Minimalist */}
       <nav className="fixed w-full z-50 top-0 left-0 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="relative container mx-auto p-8 h-16 flex justify-between items-center">
-            <Link href="/landing" className="absolute -left-10 text-gray-500 hover:text-white transition-colors z-101">
-                <ArrowLeft size={18} />
+        <div className="relative container  mx-auto p-8 h-16 flex justify-between items-center">
+            <Link href="/landing" className="absolute left-3  hover:text-white transition-colors z-101">
+                <ArrowLeft size={18} color="white" />
             </Link>
             <Image src="/images/LOGO2W.png" alt="Logo" width={70} height={90} />
             <div className="flex items-center gap-4 z-101">
@@ -135,7 +135,7 @@ export default function Option3Page() {
                       <ul className="space-y-6">
                             {content.benefits.items.map((item, i) => (
                                 <li key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-[#111] border border-white/5 hover:border-ls-accent/30 transition-colors">
-                                    <div className="bg-ls-accent/10 p-2 rounded-full text-ls-accent">
+                                    <div className="bg-ls-accent p-2 rounded-full text-ls-accent flex items-end w-full">
                                         <Check size={20} />
                                     </div>
                                     <span className="text-gray-200 font-medium">{item.text}</span>
