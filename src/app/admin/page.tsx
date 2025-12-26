@@ -383,36 +383,41 @@ function Dashboard({ onLogout }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-ls-dark text-ls-light p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-ls-dark text-ls-light p-4 md:p-10 font-sans">
       
       {/* HEADER */}
-      <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-        <div className='flex gap-4'>
-          <Image src={logos.whiteLogo} className="m-auto drop-shadow-2xl-[10px_10px_10px_rgba(255,0,0,0.5)]" alt="Logo" width={100} height={100} />
-          <h1 className="text-4xl md:text-5xl font-bold tracking-widest text-white mb-2" style={{ fontFamily: 'var(--font-imax)' }}>
-            DASHBOARD <span className="text-ls-accent">LEADS</span>
-          </h1>
-          <p className="text-white/60">Gestión de Suscriptores y Distribuidores</p>
+      <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 md:mb-10 gap-6">
+        <div className='flex flex-col sm:flex-row gap-4 items-center sm:items-start text-center sm:text-left w-full xl:w-auto'>
+          <Image src={logos.whiteLogo} className="drop-shadow-2xl-[10px_10px_10px_rgba(255,0,0,0.5)]" alt="Logo" width={80} height={80} />
+          <div>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-widest text-white mb-1" style={{ fontFamily: 'var(--font-imax)' }}>
+              DASHBOARD <span className="text-ls-accent">LEADS</span>
+            </h1>
+            <p className="text-white/60 text-sm md:text-base">Gestión de Suscriptores y Distribuidores</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-white/5 rounded-full px-4 py-2 flex items-center gap-2 border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-sm font-medium hidden sm:inline">Admin Activo</span>
-            <span className="text-xs text-white/40 border-l border-white/10 pl-2 ml-2">{adminEmail || 'Cargando...'}</span>
+        
+        <div className="flex flex-wrap justify-center sm:justify-end items-center gap-3 w-full xl:w-auto">
+          <div className="bg-white/5 rounded-full px-4 py-2 flex items-center gap-2 border border-white/10 max-w-full">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+            <span className="text-sm font-medium hidden sm:inline shrink-0">Admin Activo</span>
+            <span className="text-xs text-white/40 border-l border-white/10 pl-2 ml-2 truncate max-w-[150px]">{adminEmail || 'Cargando...'}</span>
           </div>
           
-          <Button variant="ghost" size="sm" onClick={() => setShowSettingsModal(true)} title="Configuración" className="hover:bg-ls-accent hover:text-ls-dark transition-colors">
-            <Settings className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowSettingsModal(true)} title="Configuración" className="hover:bg-ls-accent hover:text-ls-dark transition-colors">
+              <Settings className="w-5 h-5" />
+            </Button>
 
-          <Button variant="ghost" size="sm" onClick={onLogout} title="Cerrar Sesión">
-            <LogOut className="w-5 h-5" />
-          </Button>
+            <Button variant="ghost" size="sm" onClick={onLogout} title="Cerrar Sesión">
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* CONTROLS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Search & Filter */}
         <div className="lg:col-span-8 flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
@@ -420,18 +425,18 @@ function Dashboard({ onLogout }: DashboardProps) {
             <input 
               type="text" 
               placeholder="Buscar por nombre o email..." 
-              className="w-full pl-12 pr-4 py-3 bg-[#1A1A1A] border border-white/10 rounded-lg focus:border-ls-accent focus:outline-none transition-all placeholder:text-white/20"
+              className="w-full pl-12 pr-4 py-3 bg-[#1A1A1A] border border-white/10 rounded-lg focus:border-ls-accent focus:outline-none transition-all placeholder:text-white/20 text-sm md:text-base"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
             {(['All', 'Distributor', 'Newsletter'] as const).map(type => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all whitespace-nowrap ${
                   filterType === type 
                     ? 'bg-ls-accent/10 border-ls-accent text-ls-accent' 
                     : 'bg-[#1A1A1A] border-white/10 text-white/50 hover:bg-white/5'
@@ -444,22 +449,22 @@ function Dashboard({ onLogout }: DashboardProps) {
         </div>
 
         {/* Action Panel */}
-        <div className="lg:col-span-4 flex justify-end gap-3">
+        <div className="lg:col-span-4 flex justify-end gap-3 h-12">
           <AnimatePresence>
             {selectedIds.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex gap-2"
+                className="flex gap-2 w-full md:w-auto"
               >
-                <Button variant="secondary" onClick={exportToGmail} className="gap-2">
+                <Button variant="secondary" onClick={exportToGmail} className="gap-2 flex-1 md:flex-none justify-center">
                   <Mail className="w-4 h-4" />
-                  <span className="hidden md:inline">Gmail Export</span>
+                  <span className="inline">Exportar</span>
                 </Button>
-                <Button variant="primary" onClick={() => setShowMailModal(true)} className="gap-2">
+                <Button variant="primary" onClick={() => setShowMailModal(true)} className="gap-2 flex-1 md:flex-none justify-center">
                   <Send className="w-4 h-4" />
-                  <span className="hidden md:inline">Enviar Masivo</span>
+                  <span className="inline">Mensaje</span>
                 </Button>
               </motion.div>
             )}
@@ -467,8 +472,73 @@ function Dashboard({ onLogout }: DashboardProps) {
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-[#1A1A1A] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
+      {/* MOBILE LIST VIEW (Cards) */}
+      <div className="md:hidden space-y-4 mb-8">
+        <div className="flex items-center justify-between px-2 mb-2">
+            <h3 className="text-white/40 text-xs uppercase font-bold tracking-wider">Resultados ({filteredCustomers.length})</h3>
+            <button 
+                onClick={toggleSelectAll} 
+                className="flex items-center gap-2 text-xs text-ls-accent uppercase font-bold tracking-wider"
+            >
+                {selectedIds.length === filteredCustomers.length && filteredCustomers.length > 0 ? (
+                    <>Deseleccionar todos <CheckSquare className="w-4 h-4" /></>
+                ) : (
+                    <>Seleccionar todos <Square className="w-4 h-4" /></>
+                )}
+            </button>
+        </div>
+
+        {filteredCustomers.length > 0 ? (
+            filteredCustomers.map((customer) => (
+                <div 
+                    key={customer.id} 
+                    className={`bg-[#1A1A1A] border ${selectedIds.includes(customer.id) ? 'border-ls-accent/50 bg-ls-accent/[0.03]' : 'border-white/5'} rounded-xl p-4 transition-all`}
+                    onClick={() => toggleSelect(customer.id)}
+                >
+                    <div className="flex items-start gap-4">
+                        <div onClick={(e) => { e.stopPropagation(); toggleSelect(customer.id); }} className="mt-1">
+                             {selectedIds.includes(customer.id) ? (
+                                <CheckSquare className="w-6 h-6 text-ls-accent" />
+                            ) : (
+                                <Square className="w-6 h-6 text-white/20" />
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-ls-accent font-bold text-sm shrink-0">
+                                    {customer.name.charAt(0)}
+                                </div>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase ${
+                                    customer.type === 'Distributor' 
+                                    ? 'bg-ls-accent/10 border-ls-accent text-ls-accent' 
+                                    : 'bg-purple-500/10 border-purple-500 text-purple-400'
+                                }`}>
+                                    {customer.type}
+                                </span>
+                            </div>
+                            
+                            <h4 className="font-semibold text-white truncate text-lg leading-tight mb-1">{customer.name}</h4>
+                            <p className="text-white/50 text-sm truncate mb-3">{customer.email}</p>
+                            
+                            <div className="flex items-center justify-between text-xs text-white/30 border-t border-white/5 pt-3">
+                                <span className="flex items-center gap-1 truncate max-w-[60%]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white/20"></span> {customer.city || 'Sin ciudad'}
+                                </span>
+                                <span className="font-mono">{new Date(customer.date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ))
+        ) : (
+            <div className="text-center py-10 text-white/30 bg-[#1A1A1A] rounded-xl border border-white/5">
+                No se encontraron resultados
+            </div>
+        )}
+      </div>
+
+      {/* DESKTOP TABLE VIEW */}
+      <div className="hidden md:block bg-[#1A1A1A] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -549,7 +619,7 @@ function Dashboard({ onLogout }: DashboardProps) {
       </div>
 
       {/* FOOTER STATS */}
-      <div className="mt-6 flex flex-wrap gap-6 text-sm text-white/40">
+      <div className="mt-6 flex flex-wrap gap-6 text-sm text-white/40 justify-center sm:justify-start">
         <div className="flex items-center gap-2">
           <User className="w-4 h-4" />
           <span>Total: <strong className="text-white">{customers.length}</strong></span>
