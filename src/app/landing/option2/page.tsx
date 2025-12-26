@@ -302,7 +302,7 @@ export default function Option2Page() {
       {/* 7. FAQ */}
       <section className="py-24">
           <div className="container mx-auto px-4 max-w-3xl">
-              <h2 className="text-3xl font-bold font-imax mb-12 text-center">{content.faq.title}</h2>
+              <h2 className="text-2xl font-bold font-imax mb-12 text-center">{content.faq.title}</h2>
               <div className="space-y-4">
                   {content.faq.questions.map((q: any, i: number) => {
                       const isOpen = openFaqIndex === i;
