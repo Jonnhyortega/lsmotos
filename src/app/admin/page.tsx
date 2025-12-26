@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -16,7 +17,6 @@ import {
   Settings,
   Eye,
   EyeOff,
-  Lock,
   Check,
   AlertCircle
 } from 'lucide-react';
@@ -35,56 +35,140 @@ interface Customer {
 }
 
 export default function AdminPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
-  const [adminPassword, setAdminPassword] = useState('admin123'); // Dynamic internal state
-  const [adminEmail, setAdminEmail] = useState('No hay correo configurado'); // Dynamic internal state
+  const [loginEmail, setLoginEmail] = useState('');
+
   
-  // Persistence Load
+  // Reset Password State
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [newResetPwd, setNewResetPwd] = useState('');
+  
+  // Forgot Password State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+
+  // Persistence Load & URL Check
   useEffect(() => {
-    // 1. Load Session
-    const sessionLocal = localStorage.getItem('ls_admin_session');
-    const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('ls_admin_session='));
-    
-    if (sessionLocal === 'true' || sessionCookie) {
-        setIsAuthenticated(true);
+    // 1. Check if we are in Reset Mode or Verify Email Mode
+    const token = searchParams.get('token');
+    const verifyEmailToken = searchParams.get('verify_email_token');
+
+    if (token) {
+        setResetToken(token);
+        setShowResetModal(true);
     }
 
-    // 2. Load Config
-    const storedPwd = localStorage.getItem('ls_admin_pwd');
-    const storedEmail = localStorage.getItem('ls_admin_email');
+    if (verifyEmailToken) {
+        verifyEmailChange(verifyEmailToken);
+    }
 
-    if (storedPwd) setAdminPassword(storedPwd);
-    if (storedEmail) setAdminEmail(storedEmail);
-  }, []);
+    // 2. Load Session & Fetch Me
+    const checkSession = async () => {
+        const sessionLocal = localStorage.getItem('ls_admin_session');
+        if (sessionLocal === 'true') {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    setIsAuthenticated(true);
+                    // setAdminEmail(data.email); // Handled by Dashboard
+                    // setEmailForm(data.email);
+                } else {
+                   // Session invalid
+                   handleLogout();
+                }
+            } catch (e) {
+                handleLogout();
+            }
+        }
+    };
+    checkSession();
+  }, [searchParams]);
 
-  // Login Simulator
-  const handleLogin = (e: React.FormEvent) => {
+  const verifyEmailChange = async (token: string) => {
+      try {
+          const res = await fetch('/api/auth/verify-email-change', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token })
+          });
+          if (res.ok) {
+              alert('Correo actualizado correctamente. Por favor inicia sesión nuevamente.');
+              router.push('/admin');
+          } else {
+              alert('Token de verificación inválido o expirado.');
+          }
+      } catch (e) {
+          alert('Error verificando correo.');
+      }
+  };
+
+  // Real Login
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginPassword === adminPassword) {
-      setIsAuthenticated(true);
-      // Save Session
-      localStorage.setItem('ls_admin_session', 'true');
-      document.cookie = "ls_admin_session=true; path=/; max-age=86400; SameSite=Strict"; // 1 day
-    } else {
-      alert('Contraseña incorrecta');
+    
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: loginEmail, password: loginPassword })
+        });
+        
+        if (res.ok) {
+            setIsAuthenticated(true);
+            localStorage.setItem('ls_admin_session', 'true');
+        } else {
+            alert('Credenciales inválidas');
+        }
+    } catch (err) {
+        alert('Error al intentar ingresar');
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('ls_admin_session');
-    document.cookie = "ls_admin_session=; path=/; max-age=0";
   };
 
-  const persistPassword = (newPwd: string) => {
-      setAdminPassword(newPwd);
-      localStorage.setItem('ls_admin_pwd', newPwd);
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+        const res = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: forgotEmail })
+        });
+        alert('Si el correo existe, se enviará un enlace de recuperación.');
+        setShowForgotModal(false);
+    } catch (err) {
+        alert('Error al procesar solicitud');
+    }
   };
 
-  const persistEmail = (newEmail: string) => {
-      setAdminEmail(newEmail);
-      localStorage.setItem('ls_admin_email', newEmail);
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+        const res = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: resetToken, newPassword: newResetPwd })
+        });
+
+        if (res.ok) {
+            alert('Contraseña restablecida con éxito. Por favor inicia sesión.');
+            setShowResetModal(false);
+            setResetToken(null);
+            router.push('/admin'); // Clear URL
+        } else {
+            alert('Error: El token puede haber expirado.');
+        }
+    } catch (err) {
+        alert('Error al restablecer contraseña');
+    }
   };
 
   if (!isAuthenticated) {
@@ -97,6 +181,13 @@ export default function AdminPage() {
           </div>
           <div>
             <input 
+              type="email" 
+              placeholder="Email" 
+              className="w-full p-4 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-ls-accent transition-colors mb-4"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+            />
+             <input 
               type="password" 
               placeholder="Contraseña" 
               className="w-full p-4 bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:border-ls-accent transition-colors"
@@ -107,30 +198,54 @@ export default function AdminPage() {
           <Button type="submit" className="w-full">
             INGRESAR
           </Button>
-          <p className="text-xs text-center text-gray-500 mt-4">Contraseña actual: {adminPassword}</p>
+          <div className="text-center">
+            <button type="button" onClick={() => setShowForgotModal(true)} className="text-xs text-gray-500 hover:text-white underline">
+                ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </form>
+
+        {/* Forgot Password Modal */}
+        <Overlay isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} title="Recuperar Contraseña">
+             <form onSubmit={handleForgotPassword} className="space-y-4">
+                <p className="text-sm text-gray-400">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+                <input 
+                    type="email" 
+                    placeholder="Email registrado"
+                    className="w-full p-3 bg-black/20 border border-white/10 rounded text-white focus:border-ls-accent outline-none"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                />
+                <Button type="submit" className="w-full">Enviar Enlace</Button>
+             </form>
+        </Overlay>
+
+        {/* Reset Password Modal (Triggered by URL) */}
+        <Overlay isOpen={showResetModal} onClose={() => setShowResetModal(false)} title="Nueva Contraseña">
+             <form onSubmit={handleResetPassword} className="space-y-4">
+                <p className="text-sm text-gray-400">Ingresa tu nueva contraseña para recuperar el acceso.</p>
+                <input 
+                    type="password" 
+                    placeholder="Nueva Contraseña"
+                    className="w-full p-3 bg-black/20 border border-white/10 rounded text-white focus:border-ls-accent outline-none"
+                    value={newResetPwd}
+                    onChange={(e) => setNewResetPwd(e.target.value)}
+                />
+                <Button type="submit" className="w-full">Guardar Contraseña</Button>
+             </form>
+        </Overlay>
       </div>
     );
   }
 
-  return <Dashboard 
-            adminPassword={adminPassword} 
-            adminEmail={adminEmail}
-            onPasswordChange={persistPassword} 
-            onEmailChange={persistEmail}
-            onLogout={handleLogout} 
-          />;
+  return <Dashboard onLogout={handleLogout} />;
 }
 
 interface DashboardProps {
-    adminPassword: string;
-    adminEmail: string;
-    onPasswordChange: (newPwd: string) => void;
-    onEmailChange: (newEmail: string) => void;
     onLogout: () => void;
 }
 
-function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange, onLogout }: DashboardProps) {
+function Dashboard({ onLogout }: DashboardProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -146,8 +261,24 @@ function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange,
   const [pwdStatus, setPwdStatus] = useState<{ type: 'error' | 'success' | null, msg: string }>({ type: null, msg: '' });
 
   // Email State
-  const [emailForm, setEmailForm] = useState(adminEmail);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [emailForm, setEmailForm] = useState(''); 
   const [emailStatus, setEmailStatus] = useState<{ type: 'error' | 'success' | null, msg: string }>({ type: null, msg: '' });
+
+  // Fetch Admin Data
+  useEffect(() => {
+      const fetchCtx = async () => {
+          try {
+              const res = await fetch('/api/auth/me');
+              if (res.ok) {
+                  const data = await res.json();
+                  setAdminEmail(data.email);
+                  setEmailForm(data.email);
+              }
+          } catch(e) { console.error(e); }
+      };
+      fetchCtx();
+  }, []);
 
   // Fetch Data
   useEffect(() => {
@@ -203,47 +334,7 @@ function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange,
     window.location.href = `mailto:?bcc=${bccList}&subject=Información%20Motos%20LS`;
   };
 
-  // Password Change Logic
-  const handlePasswordChange = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwdStatus({ type: null, msg: '' });
-
-    // 1. Check current password
-    if (pwdFormData.current !== adminPassword) {
-        setPwdStatus({ type: 'error', msg: 'La contraseña actual es incorrecta.' });
-        return;
-    }
-
-    // 2. Validate complexity
-    // 1 uppercase, 1 special char, 8-16 chars
-    const complexityRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,16}$/;
-    if (!complexityRegex.test(pwdFormData.new)) {
-        setPwdStatus({ 
-            type: 'error', 
-            msg: 'La contraseña debe tener entre 8-16 caracteres, 1 mayúscula y 1 carácter especial.' 
-        });
-        return;
-    }
-
-    // 3. Match new and confirm
-    if (pwdFormData.new !== pwdFormData.confirm) {
-        setPwdStatus({ type: 'error', msg: 'Las contraseñas nuevas no coinciden.' });
-        return;
-    }
-
-    // Success
-    onPasswordChange(pwdFormData.new);
-    setPwdStatus({ type: 'success', msg: '¡Contraseña actualizada correctamente!' });
-    
-    // Reset form
-    setTimeout(() => {
-        setShowSettingsModal(false);
-        setPwdFormData({ current: '', new: '', confirm: '' });
-        setPwdStatus({ type: null, msg: '' });
-    }, 2000);
-  };
-
-  const handleEmailChange = (e: React.FormEvent) => {
+  const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setEmailStatus({ type: null, msg: '' });
 
@@ -253,8 +344,30 @@ function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange,
         return;
     }
 
-    onEmailChange(emailForm);
-    setEmailStatus({ type: 'success', msg: 'Correo actualizado correctamente.' });
+    try {
+        setEmailStatus({ type: null, msg: 'Enviando solicitud...' });
+        const res = await fetch('/api/auth/request-email-change', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newEmail: emailForm })
+        });
+
+        if (res.ok) {
+            setEmailStatus({ type: 'success', msg: 'Se ha enviado un enlace de verificación al nuevo correo.' });
+        } else {
+            const data = await res.json();
+            setEmailStatus({ type: 'error', msg: data.error || 'Error al solicitar cambio.' });
+        }
+    } catch(e) {
+        setEmailStatus({ type: 'error', msg: 'Error de conexión.' });
+    }
+  };
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdStatus({ type: null, msg: '' });
+    // Pending API implementation
+    alert("Para cambiar configuraciones de seguridad, implementaremos el endpoint proximamente.");
   };
 
   const toggleVisibility = (field: 'current' | 'new' | 'confirm') => {
@@ -277,7 +390,7 @@ function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange,
           <div className="bg-white/5 rounded-full px-4 py-2 flex items-center gap-2 border border-white/10">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             <span className="text-sm font-medium hidden sm:inline">Admin Activo</span>
-            <span className="text-xs text-white/40 border-l border-white/10 pl-2 ml-2">{adminEmail}</span>
+            <span className="text-xs text-white/40 border-l border-white/10 pl-2 ml-2">{adminEmail || 'Cargando...'}</span>
           </div>
           
           <Button variant="ghost" size="sm" onClick={() => setShowSettingsModal(true)} title="Configuración" className="hover:bg-ls-accent hover:text-ls-dark transition-colors">
@@ -292,7 +405,6 @@ function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange,
 
       {/* CONTROLS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
-        
         {/* Search & Filter */}
         <div className="lg:col-span-8 flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
@@ -585,5 +697,3 @@ function Dashboard({ adminPassword, adminEmail, onPasswordChange, onEmailChange,
     </div>
   );
 }
-
-
