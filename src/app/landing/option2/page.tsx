@@ -6,14 +6,13 @@ import { ArrowLeft, Check, Building2, Briefcase, Crown, ChevronDown, Plus, Minus
 import { Button } from "@/components/ui/Button";
 import { ContactForm } from "@/components/landing/ContactForm";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage } from "@/context/LanguageContext";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { LANDING_CONTENT } from "@/constants/content";
 import { useState, useEffect } from "react";
 import { Footer } from "@/components/landing/Footer";
 import { logos } from "@/constants/logos";
 
 export default function Option2Page() {
-  const { content } = useLanguage();
+  const content = LANDING_CONTENT;
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

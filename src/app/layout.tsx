@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Michroma, Poppins } from "next/font/google";
+import { Michroma, Poppins, Raleway } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
 
@@ -14,6 +14,11 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
   variable: "--font-poppins",
+});
+
+const raleway = Raleway({
+  subsets: ["latin"],
+  variable: "--font-raleway",
 });
 
 const imaxStandard = localFont({
@@ -42,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${imaxStandard.variable} ${poppins.variable} antialiased bg-ls-dark text-ls-light font-sans`}>
+      <body className={`${imaxStandard.variable} ${poppins.variable} ${raleway.variable} antialiased bg-ls-dark text-ls-light font-sans`}>
         <Providers>
             {children}
         </Providers>

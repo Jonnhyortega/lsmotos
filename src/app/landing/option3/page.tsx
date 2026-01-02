@@ -6,13 +6,12 @@ import { ArrowLeft, Check, Plus, ChevronDown, Download, User, MapPin, Menu, X, B
 import { Button } from "@/components/ui/Button";
 import { ContactForm } from "@/components/landing/ContactForm";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLanguage } from "@/context/LanguageContext";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { LANDING_CONTENT } from "@/constants/content";
 import { useState, useEffect } from "react";
 import { Footer } from "@/components/landing/Footer";
 
 export default function Option3Page() {
-  const { content } = useLanguage();
+  const content = LANDING_CONTENT;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {

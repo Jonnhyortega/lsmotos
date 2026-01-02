@@ -127,5 +127,29 @@ export const LANDING_CONTENT = {
     title: "Empezá a vender motos LS en tu ciudad.",
     description: "Contanos sobre tu negocio y te compartimos catálogo, condiciones y próximos pasos. Sin compromiso.",
     button: "Quiero ser distribuidor de motos LS"
+  },
+  selection: {
+    title: "Conceptos",
+    subtitle: "Seleccione una de las propuestas de diseño para visualizar la estrategia de captación de distribuidores.",
+    options: [
+        {
+            label: "OPCIÓN 01",
+            title: "Direct Response",
+            description: "Enfoque agresivo, conversión rápida, alto contraste. Ideal para campañas de tráfico frío.",
+            cta: "Ver Propuesta"
+        },
+        {
+            label: "OPCIÓN 02",
+            title: "Brand Story",
+            description: "Construcción de confianza, narrativa visual, estética limpia. Ideal para relaciones a largo plazo.",
+            cta: "Ver Propuesta"
+        },
+        {
+            label: "OPCIÓN 03",
+            title: "Product Focus",
+            description: "Estilo industrial, dashboard, especificaciones técnicas. Para clientes expertos.",
+            cta: "Ver Propuesta"
+        }
+    ]
   }
 };

@@ -2,17 +2,14 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { LANDING_CONTENT } from "@/constants/content";
 
 export default function LandingIndex() {
-  const { content } = useLanguage();
+  const content = LANDING_CONTENT;
 
   return (
     <div className="min-h-screen bg-[#111] text-white flex flex-col items-center justify-center p-8 relative">
-      <div className="absolute top-8 right-8">
-          <LanguageSwitcher />
-      </div>
+
       <div className="max-w-4xl w-full text-center space-y-12">
         <h1 className="text-5xl md:text-7xl font-bold font-imax tracking-tighter uppercase mb-4">
           Motos LS <span className="text-ls-accent">{content.selection.title}</span>

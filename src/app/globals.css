@@ -5,6 +5,7 @@
 @theme {
   --font-imax: var(--font-imax);
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-raleway: var(--font-raleway);
   
   --color-ls-dark: #232323;
   --color-ls-light: #F4F4F4;
@@ -19,7 +20,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-imax), sans-serif;
+  font-family: var(--font-raleway), sans-serif;
   letter-spacing: 0.05em; /* Cinematic wide feel */
 }
 
