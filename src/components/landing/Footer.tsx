@@ -133,9 +133,8 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} Motos LS. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} <span className="font-imax text-ls-accent">Motos LS</span>. Todos los derechos reservados.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-ls-accent transition-colors">Privacidad</a>
             <a href="#" className="hover:text-ls-accent transition-colors">Términos</a>

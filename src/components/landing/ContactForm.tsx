@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { motion } from "framer-motion";
 
 interface ContactFormProps {
   variant?: "dark" | "light" | "industrial";
-  buttonText?: string;
-}
+  buttonText?: string | ReactNode;
+} 
 
 export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE DISTRIBUIDOR" }: ContactFormProps) => {
   const [formData, setFormData] = useState({

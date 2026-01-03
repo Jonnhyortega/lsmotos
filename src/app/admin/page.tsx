@@ -177,7 +177,7 @@ export default function AdminPage() {
         <form onSubmit={handleLogin} className="p-8 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md w-full max-w-md space-y-6">
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-wider mb-2" style={{ fontFamily: 'var(--font-imax)' }}>ACCESO ADMIN</h1>
-            <p className="text-gray-400">Panel de control Motos LS</p>
+            <p className="text-gray-400">Panel de control <span className="font-imax text-ls-accent">Motos LS</span></p>
           </div>
           <div>
             <input 

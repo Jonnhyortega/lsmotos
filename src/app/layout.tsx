@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Michroma, Poppins, Raleway } from "next/font/google";
+import { Poppins, Raleway } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
 
-const michroma = Michroma({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-imax", // Aliasing to our variable
-});
+
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -26,6 +22,10 @@ const imaxStandard = localFont({
     {
       path: "../../public/fonts/imax-regular-standart.otf",
       weight: "400",
+    },
+    {
+      path: "../../public/fonts/imax-light.otf",
+      weight: "300",
     },
     {
       path: "../../public/fonts/imax-bold.otf",

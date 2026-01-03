@@ -16,7 +16,7 @@
 body {
   background-color: var(--color-ls-dark);
   color: var(--color-ls-light);
-  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -24,7 +24,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.05em; /* Cinematic wide feel */
 }
 
-p, span, button, li, input, textarea, label {
+p, button, li, input, textarea, label {
   font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
