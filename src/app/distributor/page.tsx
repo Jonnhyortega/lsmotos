@@ -1,119 +1,86 @@
 "use client";
 
 import Link from "next/link";
-<<<<<<< Updated upstream
-import { ArrowRight } from "lucide-react";
-import { LANDING_CONTENT } from "@/constants/content";
-=======
 import { ArrowLeft, Briefcase, Building2, Check, ChevronDown, Crown, Download, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ContactForm } from "@/components/landing/ContactForm";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-// import { LANDING_CONTENT } from "@/constants/content";
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Footer } from "@/components/landing/Footer";
 import Image from "next/image";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { ThreeBackground } from "@/components/landing/ThreeBackground";
->>>>>>> Stashed changes
+import { SectionReveal } from "@/components/ui/SectionReveal";
 
-export default function LandingIndex() {
-  const content = LANDING_CONTENT;
+export default function Option1Page() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 50);
+  });
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
 
   return (
-<<<<<<< Updated upstream
-    <div className="min-h-screen bg-[#111] text-white flex flex-col items-center justify-center p-8 relative">
-=======
     <div className="min-h-screen bg-black text-white selection:bg-ls-accent selection:text-black font-sans">
       
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full z-100 p-2 md:p-4 flex justify-between items-center pointer-events-none">
         {/* Animated Background & Border */}
-        <motion.div 
+        <motion.div
             className="absolute inset-0 bg-black/30 backdrop-blur-md border-b border-white/10"
             initial={false}
             animate={{ y: isScrolled ? "-100%" : "0%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
         />
->>>>>>> Stashed changes
 
-      <div className="max-w-4xl w-full text-center space-y-12">
-        <h1 className="text-5xl md:text-7xl font-bold font-imax tracking-tighter uppercase mb-4">
-          Motos LS <span className="text-ls-accent">{content.selection.title}</span>
-        </h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-          {content.selection.subtitle}
-        </p>
+        {/* Left: Volver */}
+        <motion.div 
+            className="flex items-center gap-4 z-101 pointer-events-auto"
+            animate={{ opacity: isScrolled ? 0 : 1, y: isScrolled ? -20 : 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <Link href="/" className="flex items-center gap-2 text-sm opacity-50 hover:opacity-100 transition-opacity font-bold uppercase tracking-widest relative">
+                <ArrowLeft size={16} /> <span className="hidden sm:inline">Volver</span>
+            </Link>
+        </motion.div>
+        
+        {/* Center: Logo */}
+        <motion.div 
+            className="absolute left-1/2 -translate-x-1/2 z-101 pointer-events-auto"
+            animate={{ opacity: isScrolled ? 0 : 1, y: isScrolled ? -20 : 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <Image src="/images/LOGO2W.png" alt="Logo" width={60} height={60} />
+        </motion.div>
 
-<<<<<<< Updated upstream
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link href="/landing/option1" className="group relative block p-8 bg-[#1a1a1a] border border-white/10 hover:border-ls-accent transition-all hover:-translate-y-2 rounded-xl text-left overflow-hidden">
-             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
-                <ArrowRight className="text-ls-accent" size={32} />
-             </div>
-             <div className="h-full flex flex-col justify-between">
-                <div>
-                   <span className="text-xs font-mono text-ls-accent mb-2 block tracking-widest">{content.selection.options[0].label}</span>
-                   <h2 className="text-2xl font-bold font-imax mb-2">{content.selection.options[0].title}</h2>
-                   <p className="text-sm text-gray-400">{content.selection.options[0].description}</p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-white/5">
-                    <span className="text-xs uppercase tracking-wider text-gray-500 group-hover:text-white transition-colors">{content.selection.options[0].cta} &rarr;</span>
-                </div>
-             </div>
-          </Link>
-
-          <Link href="/landing/option2" className="group relative block p-8 bg-[#F4F4F4] text-black border border-transparent hover:border-ls-accent transition-all hover:-translate-y-2 rounded-xl text-left overflow-hidden">
-             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
-                <ArrowRight className="text-ls-dark" size={32} />
-             </div>
-             <div className="h-full flex flex-col justify-between">
-                <div>
-                   <span className="text-xs font-mono text-gray-500 mb-2 block tracking-widest">{content.selection.options[1].label}</span>
-                   <h2 className="text-2xl font-bold font-imax mb-2 text-ls-dark">{content.selection.options[1].title}</h2>
-                   <p className="text-sm text-gray-600">{content.selection.options[1].description}</p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-black/10">
-                   <span className="text-xs uppercase tracking-wider text-gray-500 group-hover:text-black transition-colors">{content.selection.options[1].cta} &rarr;</span>
-                </div>
-             </div>
-          </Link>
-
-          <Link href="/landing/option3" className="group relative block p-8 bg-[#232323] border border-white/10 hover:border-ls-accent transition-all hover:-translate-y-2 rounded-xl text-left overflow-hidden">
-             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity z-10">
-                <ArrowRight className="text-ls-accent" size={32} />
-             </div>
-             <div className="h-full flex flex-col justify-between relative z-10">
-                <div>
-                   <span className="text-xs font-mono text-ls-accent mb-2 block tracking-widest">{content.selection.options[2].label}</span>
-                   <h2 className="text-2xl font-bold font-imax mb-2">{content.selection.options[2].title}</h2>
-                   <p className="text-sm text-gray-400">{content.selection.options[2].description}</p>
-                </div>
-                <div className="mt-8 pt-4 border-t border-white/5">
-                   <span className="text-xs uppercase tracking-wider text-gray-500 group-hover:text-white transition-colors">{content.selection.options[2].cta} &rarr;</span>
-                </div>
-             </div>
-          </Link>
-        </div>
-      </div>
-=======
-        {/* Desktop CTA - Always Visible */}
-        <div className="hidden md:block z-101 pointer-events-auto">
+        {/* Desktop CTA - Animated */}
+        <motion.div 
+            className="hidden md:block z-101 pointer-events-auto"
+            animate={{ opacity: isScrolled ? 0 : 1, y: isScrolled ? -20 : 0 }}
+            transition={{ duration: 0.3 }}
+        >
              <Button variant="outline" size="sm" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth'})}>
                 CONTACTAR
             </Button>
-        </div>
+        </motion.div>
 
         {/* Mobile Menu Toggle */}
         <motion.button 
             className="md:hidden z-101 p-2 text-white hover:text-ls-accent transition-colors pointer-events-auto"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            animate={{ opacity: isScrolled ? 0 : 1 }} // Optionally hide on scroll too, or keep it? User said "navbar se esconda", implying the bar. 
-            // Usually you want mobile menu access always. But let's stick to "hide navbar". 
-            // If the user wants JUST the contact button, I should probably hide the hamburger too if strictly interpreting "navbar hides". 
-            // However, removing navigation capability is risky. 
-            // Let's assume hiding it forms part of the "clean view" request.
+            animate={{ opacity: isScrolled ? 0 : 1 }} 
         >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </motion.button>
@@ -159,9 +126,7 @@ export default function LandingIndex() {
         </AnimatePresence>
       </nav>
 
-
-
-     {/* 1. Hero Section */}
+      {/* 1. Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#050505]">
         <ThreeBackground />
 
@@ -185,8 +150,9 @@ export default function LandingIndex() {
         </motion.div>
       </section>
 
+
       {/* 2. Benefits Section (Directo) */}
-      <section className="py-24 bg-linear-to-b from-[#0a0a0a] to-[#151515]">
+      <SectionReveal className="py-24 bg-linear-to-b from-[#0a0a0a] to-[#151515]">
          <div className="container mx-auto px-4">
              <div className="text-center mb-16">
                  <h2 className="text-2xl font-imax uppercase mb-4">Pensado para negocios que quieren vender más, sin complicarse la vida.</h2>
@@ -244,10 +210,10 @@ export default function LandingIndex() {
                  </Button>
             </div>
          </div>
-      </section>
+      </SectionReveal>
 
       {/* 3. How It Works (Redesigned) */}
-      <section className="py-24 bg-gray-50 text-ls-dark font-raleway">
+      <SectionReveal className="py-24 bg-gray-50 text-ls-dark font-raleway">
           <div className="container mx-auto px-4 max-w-5xl">
               <h2 className="text-3xl md:text-5xl font-raleway font-bold uppercase mb-16 text-center text-ls-dark">
                   ¿Cómo es trabajar con <span className="font-imax text-ls-accent">motos LS</span>?
@@ -348,10 +314,10 @@ export default function LandingIndex() {
 
               </div>
           </div>
-      </section>
+      </SectionReveal>
 
       {/* 4. Catalog */}
-      <section className="py-24 px-4 bg-gradient-to-b from-[#151515] to-[#0a0a0a]">
+      <SectionReveal className="py-24 px-4 bg-gradient-to-b from-[#151515] to-[#0a0a0a]">
           <div className="container mx-auto text-center mb-16 flex flex-col gap-3">
               <h2 className="text-2xl md:text-5xl font-imax uppercase mb-4">Una línea de motos pensada para lo que la gente realmente busca.</h2>
               <Button variant="ghost" className="text-ls-accent">
@@ -381,10 +347,10 @@ export default function LandingIndex() {
                     <p className="text-gray-400 text-sm">Para el cliente que quiere diseño, potencia y prestaciones superiores. Excelente opción para diferenciar tu local.</p>
                 </div>
           </div>
-      </section>
+      </SectionReveal>
       
       {/* 5. Commercial Benefits */}
-      <section id="conditions" className="py-24 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-ls-accent/20 via-black to-black text-white border-y border-white/10">
+      <SectionReveal id="conditions" className="py-24 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-ls-accent/20 via-black to-black text-white border-y border-white/10">
           <div className="container mx-auto px-4">
                <h2 className="text-2xl md:text-5xl font-imax uppercase mb-12 text-center text-white">¿Por qué sumar <span className="text-ls-accent">motos LS</span> a tu negocio?</h2>
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -414,27 +380,27 @@ export default function LandingIndex() {
                    </div>
                </div>
           </div>
-      </section>
+      </SectionReveal>
 
       {/* 6. Testimonials */}
-      <section className="py-24 bg-linear-to-br from-[#000000] to-[#111111]">
+      <SectionReveal className="py-24 bg-linear-to-br from-[#000000] to-[#111111]">
            <div className="container mx-auto px-4 text-center">
                <h2 className="text-2xl md:text-5xl font-imax uppercase mb-12 text-ls-light">Historias de negocios que ya crecieron con <span className="text-ls-accent">motos LS</span></h2>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                    <div className="bg-[#111] p-8 border border-white/5 rounded-lg">
-                       <p className="italic text-gray-300 mb-4">"Tenía un taller mecánico y empecé con 3 motos en exposición. En 6 meses, la venta de motos se volvió una de las patas principales del negocio."</p>
+                       <p className="italic text-gray-300 mb-4">&quot;Tenía un taller mecánico y empecé con 3 motos en exposición. En 6 meses, la venta de motos se volvió una de las patas principales del negocio.&quot;</p>
                        <p className="font-bold text-ls-accent">— Juan, taller en [Ciudad]</p>
                    </div>
                    <div className="bg-[#111] p-8 border border-white/5 rounded-lg">
-                       <p className="italic text-gray-300 mb-4">"Sumamos <span className="font-imax text-ls-accent">motos LS</span> a nuestro local de accesorios, empezamos con un pedido chico y hoy estamos pensando en abrir una segunda sucursal."</p>
+                       <p className="italic text-gray-300 mb-4">&quot;Sumamos motos LS a nuestro local de accesorios, empezamos con un pedido chico y hoy estamos pensando en abrir una segunda sucursal.&quot;</p>
                        <p className="font-bold text-ls-accent">— María, local multimarca</p>
                    </div>
                </div>
            </div>
-      </section>
+      </SectionReveal>
 
       {/* 7. FAQ */}
-      <section className="py-24 bg-gradient-to-b from-[#232323] to-black border-t border-white/10">
+      <SectionReveal className="py-24 bg-gradient-to-b from-[#232323] to-black border-t border-white/10">
           <div className="container mx-auto px-4">
               <h2 className="text-2xl md:text-5xl font-imax uppercase mb-12 text-center text-white leading-tight w-full break-words hyphens-auto">Preguntas frecuentes de nuevos distribuidores</h2>
               <div className="space-y-6">
@@ -456,10 +422,10 @@ export default function LandingIndex() {
                   </div>
               </div>
           </div>
-      </section>
+      </SectionReveal>
 
       {/* 8. Final CTA & FORM */}
-      <section id="contact" className="py-24 bg-black relative">
+      <SectionReveal id="contact" className="py-24 bg-black relative">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-50"></div>
           <div className="container mx-auto px-4 relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -472,16 +438,16 @@ export default function LandingIndex() {
                       </p>
                   </div>
                   <div className="bg-[#111] p-8 md:p-10 rounded-xl border border-white/10 shadow-2xl shadow-ls-accent/5">
-                      <ContactForm variant="dark" buttonText={<>Quiero ser distribuidor de <span className="font-imax text-ls-accent">motos LS</span></>} />
+                      <ContactForm variant="dark" buttonText="Quiero ser distribuidor de motos LS" />
                   </div>
               </div>
           </div>
-      </section>
+      </SectionReveal>
+
 
       {/* Footer */}
       <Footer />
       <WhatsAppButton />
->>>>>>> Stashed changes
     </div>
   );
 }

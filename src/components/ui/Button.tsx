@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -23,6 +23,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             'bg-white text-ls-dark hover:bg-gray-200': variant === 'secondary',
             'border-2 border-ls-accent text-ls-accent hover:bg-ls-accent hover:text-ls-dark': variant === 'outline',
             'hover:bg-ls-light/10 text-ls-light': variant === 'ghost',
+            'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white': variant === 'danger',
             'h-9 p-4 text-sm': size === 'sm',
             'h-11 p-8 text-base': size === 'md',
             'h-14 p-10 text-lg': size === 'lg',

@@ -66,3 +66,32 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    await connectDB();
+    const { ids } = await request.json();
+    console.log("DELETE request received for IDs:", ids);
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: 'No IDs provided' },
+        { status: 400 }
+      );
+    }
+
+    const result = await Customer.deleteMany({ _id: { $in: ids } });
+    console.log("Delete result:", result);
+
+    return NextResponse.json(
+      { success: true, message: 'Customers deleted successfully' },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error('Database Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete customers', details: error.message },
+      { status: 500 }
+    );
+  }
+}

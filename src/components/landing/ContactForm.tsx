@@ -3,6 +3,8 @@
 import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 interface ContactFormProps {
   variant?: "dark" | "light" | "industrial";
@@ -18,6 +20,8 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
     message: ""
   });
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +41,7 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
 
       if (res.ok) {
         setStatus("success");
+        router.push('/gracias');
       } else {
         console.error(data.error);
         setStatus("error");
@@ -125,7 +130,12 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
           className="w-full"
           variant={variant === "industrial" ? "outline" : "primary"}
         >
-          {status === "submitting" ? "Enviando..." : status === "success" ? "¡Mensaje Enviado!" : buttonText}
+          {status === "submitting" ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="animate-spin" size={20} />
+              <span>Enviando...</span>
+            </div>
+          ) : status === "success" ? "¡Mensaje Enviado!" : buttonText}
         </Button>
       </div>
     </form>
