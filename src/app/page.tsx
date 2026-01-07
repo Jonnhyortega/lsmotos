@@ -39,7 +39,7 @@ export default function Home() {
 
             {/* Actions */}
             <div className="space-y-4 w-full">
-                <Link href="/landing" className="block w-full">
+                <Link href="/distributor" className="block w-full">
                     <Button 
                         size="lg" 
                         className="w-full uppercase tracking-widest group flex items-center justify-center gap-2"
