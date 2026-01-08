@@ -50,7 +50,7 @@ export default function Option1Page() {
             animate={{ opacity: isScrolled ? 0 : 1, y: isScrolled ? -20 : 0 }}
             transition={{ duration: 0.3 }}
         >
-            <Link href="/landing" className="flex items-center gap-2 text-sm opacity-50 hover:opacity-100 transition-opacity font-bold uppercase tracking-widest relative">
+            <Link href="/" className="flex items-center gap-2 text-sm opacity-50 hover:opacity-100 transition-opacity font-bold uppercase tracking-widest relative">
                 <ArrowLeft size={16} /> <span className="hidden sm:inline">Volver</span>
             </Link>
         </motion.div>

@@ -38,7 +38,7 @@ export default function Option2Page() {
       <header className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="container mx-auto px-4 h-16 flex justify-between items-center">
             <div className="flex items-center gap-4 z-101">
-                <Link href="/landing" className="text-gray-400 hover:text-ls-dark transition-colors">
+                <Link href="/" className="text-gray-400 hover:text-ls-dark transition-colors">
                     <ArrowLeft size={20} />
                 </Link>
                 <div className="text-xl font-bold font-imax tracking-wide">

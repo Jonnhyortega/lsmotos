@@ -28,7 +28,8 @@ import {
   Facebook, 
   Instagram, 
   Smartphone, 
-  Globe
+  Globe,
+  Music
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Overlay } from '@/components/ui/Overlay';
@@ -151,7 +152,7 @@ function AdminPageContent() {
             try {
                 const res = await fetch('/api/auth/me');
                 if (res.ok) {
-                    const data = await res.json();
+                    // const data = await res.json();
                     setIsAuthenticated(true);
                     // setAdminEmail(data.email); // Handled by Dashboard
                     // setEmailForm(data.email);
@@ -163,18 +164,15 @@ function AdminPageContent() {
                 handleLogout();
             }
         }
-    };
-    checkSession();
-  }, [searchParams]);
-
-
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
         setIsInitialLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    };
+    
+    // Slight delay to ensure smooth transition
+    setTimeout(() => {
+        checkSession();
+    }, 500);
+
+  }, [searchParams]);
 
   if (isInitialLoading) {
       return <BrandLoader size="fullscreen" />;
@@ -214,7 +212,6 @@ function AdminPageContent() {
         setIsLoggingIn(false);
     }
   };
-
 
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -401,16 +398,42 @@ interface DashboardProps {
     showDialog: (config: { title: string; description: string; variant?: DialogVariant; onConfirm?: () => void }) => void;
 }
 
+interface EmailLog {
+  id: string;
+  subject: string;
+  message: string;
+  recipients: number;
+  status: string;
+  date: string;
+}
+
 function Dashboard({ onLogout, showDialog }: DashboardProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'All' | 'Distributor' | 'Newsletter'>('All');
+  
+  // View Mode
+  const [viewMode, setViewMode] = useState<'subscribers' | 'logs'>('subscribers');
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+  const [selectedLog, setSelectedLog] = useState<EmailLog | null>(null);
 
   const [showMailModal, setShowMailModal] = useState(false);
   const [mailSubject, setMailSubject] = useState('');
   const [mailMessage, setMailMessage] = useState('');
   const [isSendingMail, setIsSendingMail] = useState(false);
+
+  // Fetch Logs
+  useEffect(() => {
+      if (viewMode === 'logs') {
+          fetch('/api/admin/emails-log')
+            .then(res => res.json())
+            .then(data => setEmailLogs(data))
+            .catch(err => console.error(err));
+      }
+  }, [viewMode]);
+
+
 
   const handleSendBulkEmail = async () => {
       if (!mailSubject.trim() || !mailMessage.trim()) return;
@@ -465,6 +488,7 @@ function Dashboard({ onLogout, showDialog }: DashboardProps) {
   const handleDelete = (idsToDelete: string[]) => {
     console.log(idsToDelete)  
     showDialog({
+
         title: 'Confirmar Eliminación',
         description: `¿Estás seguro que deseas eliminar ${idsToDelete.length} usuario(s)? Esta acción no se puede deshacer.`,
         variant: 'error',
@@ -734,33 +758,58 @@ function Dashboard({ onLogout, showDialog }: DashboardProps) {
       {/* CONTROLS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Search & Filter */}
-        <div className="lg:col-span-8 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
-            <input 
-              type="text" 
-              placeholder="Buscar por nombre o email..." 
-              className="w-full pl-12 pr-4 py-3 bg-[#1A1A1A] border border-white/10 rounded-lg focus:border-ls-accent focus:outline-none transition-all placeholder:text-white/20 text-sm md:text-base"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        {/* Search & Filter */}
+        <div className="lg:col-span-8 flex flex-col gap-4">
+             {/* View Switcher */}
+             <div className="flex bg-[#1A1A1A] p-1 rounded-lg border border-white/10 w-fit">
+                <button 
+                    onClick={() => setViewMode('subscribers')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        viewMode === 'subscribers' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    Suscriptores
+                </button>
+                <button 
+                     onClick={() => setViewMode('logs')}
+                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        viewMode === 'logs' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    Historial de Correos
+                </button>
+             </div>
+
+          {viewMode === 'subscribers' && (
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
+                <input 
+                type="text" 
+                placeholder="Buscar por nombre o email..." 
+                className="w-full pl-12 pr-4 py-3 bg-[#1A1A1A] border border-white/10 rounded-lg focus:border-ls-accent focus:outline-none transition-all placeholder:text-white/20 text-sm md:text-base"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+            
+            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                {(['All', 'Distributor', 'Newsletter'] as const).map(type => (
+                <button
+                    key={type}
+                    onClick={() => setFilterType(type)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all whitespace-nowrap ${
+                    filterType === type 
+                        ? 'bg-ls-accent/10 border-ls-accent text-ls-accent' 
+                        : 'bg-[#1A1A1A] border-white/10 text-white/50 hover:bg-white/5'
+                    }`}
+                >
+                    {type === 'All' ? 'Todos' : type}
+                </button>
+                ))}
+            </div>
           </div>
-          
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-            {(['All', 'Distributor', 'Newsletter'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setFilterType(type)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all whitespace-nowrap ${
-                  filterType === type 
-                    ? 'bg-ls-accent/10 border-ls-accent text-ls-accent' 
-                    : 'bg-[#1A1A1A] border-white/10 text-white/50 hover:bg-white/5'
-                }`}
-              >
-                {type === 'All' ? 'Todos' : type}
-              </button>
-            ))}
-          </div>
+          )}
         </div>
 
         {/* Action Panel */}
@@ -788,6 +837,8 @@ function Dashboard({ onLogout, showDialog }: DashboardProps) {
         </div>
       </div>
 
+      {viewMode === 'subscribers' ? (
+      <>
       {/* MOBILE LIST VIEW (Cards) */}
       <div className="md:hidden space-y-4 mb-8">
         <div className="flex items-center justify-between px-2 mb-2">
@@ -953,6 +1004,106 @@ function Dashboard({ onLogout, showDialog }: DashboardProps) {
           <span>Distribuidores: <strong className="text-white">{customers.filter(c => c.type === 'Distributor').length}</strong></span>
         </div>
       </div>
+      </>
+      ) : (
+        // EMAIL LOGS VIEW
+        <div className="space-y-6">
+            <div className="bg-[#1A1A1A] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-white/40">
+                                <th className="p-4 font-medium">Asunto</th>
+                                <th className="p-4 font-medium text-center">Destinatarios</th>
+                                <th className="p-4 font-medium">Estado</th>
+                                <th className="p-4 font-medium text-right">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {emailLogs.length > 0 ? (
+                                emailLogs.map((log) => (
+                                    <tr 
+                                        key={log.id} 
+                                        className="hover:bg-white/[0.02] transition-colors cursor-pointer group"
+                                        onClick={() => setSelectedLog(log)}
+                                    >
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                    <Mail size={16} />
+                                                </div>
+                                                <span className="font-semibold text-white">{log.subject}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-center text-white/70">{log.recipients}</td>
+                                        <td className="p-4">
+                                            <span className="px-2 py-1 rounded-full text-[10px] font-bold border uppercase bg-green-500/10 border-green-500 text-green-400">
+                                                {log.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right text-white/40 font-mono text-xs">
+                                            {new Date(log.date).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="p-16 text-center text-white/30">
+                                        <div className="flex flex-col items-center gap-4">
+                                            <Mail size={40} className="opacity-50" />
+                                            <p>No hay historial de correos enviados.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {/* Disclaimer */}
+            <p className="text-xs text-white/20 text-center italic">
+                * El historial muestra los correos enviados recientemente. Haga clic en una fila para ver el detalle.
+            </p>
+        </div>
+      )}
+
+      {/* EMAIL DETAIL MODAL */}
+      {selectedLog && (
+        <Overlay isOpen={!!selectedLog} onClose={() => setSelectedLog(null)} title="Detalle del Correo">
+             <div className="space-y-6">
+                 <div>
+                     <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Asunto</h4>
+                     <p className="text-xl font-semibold text-white">{selectedLog.subject}</p>
+                 </div>
+                 
+                 <div className="flex gap-8 border-b border-white/10 pb-4">
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Destinatarios</h4>
+                         <p className="text-white">{selectedLog.recipients}</p>
+                     </div>
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Fecha</h4>
+                         <p className="text-white">{new Date(selectedLog.date).toLocaleString()}</p>
+                     </div>
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Estado</h4>
+                         <span className="text-green-400 text-sm font-bold uppercase">{selectedLog.status}</span>
+                     </div>
+                 </div>
+
+                 <div>
+                     <h4 className="text-xs font-bold text-white/40 mb-2 uppercase">Mensaje</h4>
+                     <div className="bg-black/20 border border-white/10 rounded-lg p-4 text-white/80 font-mono text-sm whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+                         {selectedLog.message}
+                     </div>
+                 </div>
+
+                 <div className="flex justify-end pt-2">
+                     <Button variant="ghost" onClick={() => setSelectedLog(null)}>Cerrar</Button>
+                 </div>
+             </div>
+        </Overlay>
+      )}
 
       {/* MAIL MODAL */}
       {showMailModal && (
@@ -1024,7 +1175,10 @@ function SettingsContent({ adminEmail, onClose }: { adminEmail: string, onClose:
         showFacebook: true,
         showEmail: true,
         showAddress: true,
-        showMapsLink: true
+
+        showMapsLink: true,
+        tiktok: '',
+        showTiktok: true
     });
     const [siteStatus, setSiteStatus] = useState<{ type: 'error' | 'success' | null, msg: string }>({ type: null, msg: '' });
 
@@ -1048,7 +1202,9 @@ function SettingsContent({ adminEmail, onClose }: { adminEmail: string, onClose:
                             showFacebook: data.showFacebook !== undefined ? data.showFacebook : true,
                             showEmail: data.showEmail !== undefined ? data.showEmail : true,
                             showAddress: data.showAddress !== undefined ? data.showAddress : true,
-                            showMapsLink: data.showMapsLink !== undefined ? data.showMapsLink : true
+                            showMapsLink: data.showMapsLink !== undefined ? data.showMapsLink : true,
+                            tiktok: data.tiktok || '',
+                            showTiktok: data.showTiktok !== undefined ? data.showTiktok : true
                         });
                     }
                 }
@@ -1444,6 +1600,29 @@ function SettingsContent({ adminEmail, onClose }: { adminEmail: string, onClose:
                                                 placeholder="https://instagram.com/..."
                                                 value={siteConfig.instagram}
                                                 onChange={(e) => setSiteConfig({...siteConfig, instagram: e.target.value})}
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <label className="block text-xs font-bold text-white/40 uppercase flex items-center gap-2">
+                                                    <Music size={12}/> TikTok (Link)
+                                                </label>
+                                                <label className="relative inline-flex items-center cursor-pointer scale-75">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="sr-only peer" 
+                                                        checked={siteConfig.showTiktok}
+                                                        onChange={(e) => setSiteConfig({...siteConfig, showTiktok: e.target.checked})}
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ls-accent"></div>
+                                                </label>
+                                            </div>
+                                            <input 
+                                                type="text" 
+                                                className="w-full bg-black/20 border border-white/10 rounded p-3 text-white focus:border-ls-accent outline-none text-sm placeholder:text-white/20"
+                                                placeholder="https://tiktok.com/..."
+                                                value={siteConfig.tiktok}
+                                                onChange={(e) => setSiteConfig({...siteConfig, tiktok: e.target.value})}
                                             />
                                         </div>
                                         <div>

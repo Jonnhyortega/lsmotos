@@ -86,6 +86,23 @@ export async function POST(req: Request) {
         }, { status: 500 });
     }
 
+    // 5. Save Log
+    if (successCount > 0) {
+        try {
+            await import('@/models/EmailLog').then(mod => mod.default.create({
+                subject,
+                message,
+                recipients: successCount,
+                recipientIds: customers.map(c => c._id),
+                status: failureCount === 0 ? 'Enviado' : 'Parcial',
+                date: new Date()
+            }));
+        } catch (logError) {
+            console.error('Failed to save email log:', logError);
+            // Don't fail the request if logging fails, but maybe note it?
+        }
+    }
+
     return NextResponse.json({ 
         success: true, 
         message: summaryMessage,

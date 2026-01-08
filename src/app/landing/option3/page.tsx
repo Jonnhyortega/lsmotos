@@ -31,7 +31,7 @@ export default function Option3Page() {
       {/* 1. Navbar Minimalist */}
       <nav className="fixed w-full z-50 top-0 left-0 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5">
         <div className="relative container  mx-auto p-8 h-16 flex justify-between items-center">
-            <Link href="/landing" className="absolute left-3  hover:text-white transition-colors z-101">
+            <Link href="/" className="absolute left-3  hover:text-white transition-colors z-101">
                 <ArrowLeft size={18} color="white" />
             </Link>
             <Image src="/images/LOGO2W.png" alt="Logo" width={70} height={90} />

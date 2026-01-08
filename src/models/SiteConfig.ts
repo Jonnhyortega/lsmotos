@@ -26,12 +26,17 @@ const SiteConfigSchema = new Schema({
     type: String,
     default: ''
   },
+  tiktok: {
+    type: String,
+    default: ''
+  },
   showWhatsapp: { type: Boolean, default: true },
   showInstagram: { type: Boolean, default: true },
   showFacebook: { type: Boolean, default: true },
   showEmail: { type: Boolean, default: true },
   showAddress: { type: Boolean, default: true },
   showMapsLink: { type: Boolean, default: true },
+  showTiktok: { type: Boolean, default: true },
   updatedAt: {
     type: Date,
     default: Date.now

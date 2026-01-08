@@ -25,7 +25,9 @@ export const Footer = () => {
       showFacebook: true,
       showEmail: true,
       showAddress: true,
-      showMapsLink: true
+      showMapsLink: true,
+      tiktok: '',
+      showTiktok: true
     });
   
     // Fetch configuration
@@ -102,6 +104,7 @@ export const Footer = () => {
               </p>
               <div className="flex gap-4">
                 {config.showInstagram && config.instagram && <SocialLink href={config.instagram} icon={<Instagram size={20} />} />}
+                {config.showTiktok && config.tiktok && <SocialLink href={config.tiktok} icon={<TikTokIcon size={20} />} />}
                 {config.showFacebook && config.facebook && <SocialLink href={config.facebook} icon={<Facebook size={20} />} />}
               </div>
             </div>
@@ -156,7 +159,7 @@ export const Footer = () => {
                     </span>
                   </li>
                 )}
-
+  
                 {config.showEmail && config.email && (
                   <li className="flex items-center gap-3 text-gray-400">
                     <Mail className="text-ls-accent shrink-0" size={18} />
@@ -212,17 +215,13 @@ export const Footer = () => {
             </div>
           </div>
   
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-around items-center gap-4 text-sm text-gray-500">
             <p>© {new Date().getFullYear()} <span className="font-imax text-ls-accent">Motos LS</span>. Todos los derechos reservados.</p>
-            <div className="flex gap-6 items-center">
-              <a href="#" className="hover:text-ls-accent transition-colors">Privacidad</a>
-              <a href="#" className="hover:text-ls-accent transition-colors">Términos</a>
               <div className="w-px h-3 bg-white/20 hidden md:block"></div>
               <a href="https://www.astralvisionestudio.com/" target="_blank" rel="noopener noreferrer" className="hover:text-ls-accent transition-colors flex items-center gap-1 group">
                  <span className="opacity-50 text-xs">by</span> 
                  <span className="font-semibold group-hover:text-ls-accent">Astral Vision</span>
               </a>
-            </div>
           </div>
         </div>
       </footer>
@@ -239,6 +238,19 @@ export const Footer = () => {
     >
       {icon}
     </a>
+  );
+  
+  const TikTokIcon = ({ size = 24 }: { size?: number }) => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      stroke="none"
+    >
+      <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.329 6.329 0 0 0-5.394 10.692 6.33 6.33 0 0 0 10.857-4.424V8.687a8.182 8.182 0 0 0 4.773 1.526V6.79a4.831 4.831 0 0 1-1.003-.104z"/>
+    </svg>
   );
 
 const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => (

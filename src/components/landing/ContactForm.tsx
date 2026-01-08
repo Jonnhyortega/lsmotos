@@ -17,11 +17,40 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
     email: "",
     phone: "",
     company: "",
-    message: ""
+    message: "",
+    city: "",
+    province: ""
   });
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
 
   const router = useRouter();
+
+  const ARGENTINA_PROVINCES = [
+    "Ciudad Autónoma de Buenos Aires",
+    "Buenos Aires",
+    "Catamarca",
+    "Chaco",
+    "Chubut",
+    "Córdoba",
+    "Corrientes",
+    "Entre Ríos",
+    "Formosa",
+    "Jujuy",
+    "La Pampa",
+    "La Rioja",
+    "Mendoza",
+    "Misiones",
+    "Neuquén",
+    "Río Negro",
+    "Salta",
+    "San Juan",
+    "San Luis",
+    "Santa Cruz",
+    "Santa Fe",
+    "Santiago del Estero",
+    "Tierra del Fuego",
+    "Tucumán"
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +61,13 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          type: 'Distributor' // Explicitly marking these as potential distributors
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company,
+          message: formData.message,
+          city: formData.province ? `${formData.city} (${formData.province})` : formData.city, // Combine for backend
+          type: 'Distributor' 
         })
       });
 
@@ -41,11 +75,10 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
 
       if (res.ok) {
         setStatus("success");
-        router.push('/gracias');
+        router.push('/lsmotos-contact');
       } else {
         console.error(data.error);
         setStatus("error");
-        // Optional: Reset status after a few seconds
         setTimeout(() => setStatus("idle"), 3000);
       }
     } catch (error) {
@@ -65,7 +98,7 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-lg mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium mb-2 opacity-80">Nombre Completo</label>
+          <label className="block text-sm font-medium mb-2 opacity-80">Nombre Completo <span className="text-ls-accent">*</span></label>
           <input
             required
             type="text"
@@ -76,40 +109,67 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2 opacity-80">Empresa / Taller</label>
+          <label className="block text-sm font-medium mb-2 opacity-80">Email <span className="text-ls-accent">*</span></label>
           <input
             required
-            type="text"
+            type="email"
             className={inputClasses}
-            placeholder="Motos Juan"
-            value={formData.company}
-            onChange={(e) => setFormData({...formData, company: e.target.value})}
+            placeholder="juan@email.com"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
           />
         </div>
       </div>
       
-      <div>
-        <label className="block text-sm font-medium mb-2 opacity-80">Email</label>
-        <input
-          required
-          type="email"
-          className={inputClasses}
-          placeholder="juan@email.com"
-          value={formData.email}
-          onChange={(e) => setFormData({...formData, email: e.target.value})}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+           <label className="block text-sm font-medium mb-2 opacity-80">Provincia <span className="text-ls-accent">*</span></label>
+           <select 
+              required
+              className={`${inputClasses} appearance-none cursor-pointer`}
+              value={formData.province}
+              onChange={(e) => setFormData({...formData, province: e.target.value})}
+           >
+              <option value="" disabled className="text-gray-500">Seleccionar...</option>
+              {ARGENTINA_PROVINCES.map(p => (
+                  <option key={p} value={p} className="text-black">{p}</option>
+              ))}
+           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2 opacity-80">Ciudad <span className="text-ls-accent">*</span></label>
+          <input
+            required
+            type="text"
+            className={inputClasses}
+            placeholder="Tu ciudad"
+            value={formData.city}
+            onChange={(e) => setFormData({...formData, city: e.target.value})}
+          />
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-2 opacity-80">Teléfono</label>
-        <input
-          required
-          type="tel"
-          className={inputClasses}
-          placeholder="+54 11 ..."
-          value={formData.phone}
-          onChange={(e) => setFormData({...formData, phone: e.target.value})}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 opacity-80">Empresa / Taller <span className="text-xs opacity-50">(Opcional)</span></label>
+            <input
+              type="text"
+              className={inputClasses}
+              placeholder="Motos Juan"
+              value={formData.company}
+              onChange={(e) => setFormData({...formData, company: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 opacity-80">Teléfono <span className="text-xs opacity-50">(Opcional)</span></label>
+            <input
+              type="tel"
+              className={inputClasses}
+              placeholder="+54 11 ..."
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+            />
+          </div>
       </div>
 
       <div>
