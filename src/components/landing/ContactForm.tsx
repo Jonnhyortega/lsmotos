@@ -128,7 +128,15 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
               required
               className={`${inputClasses} appearance-none cursor-pointer`}
               value={formData.province}
-              onChange={(e) => setFormData({...formData, province: e.target.value})}
+              onChange={(e) => {
+                const selectedProvince = e.target.value;
+                const isCaba = selectedProvince === "Ciudad Autónoma de Buenos Aires";
+                setFormData({
+                  ...formData,
+                  province: selectedProvince,
+                  city: isCaba ? "Ciudad Autónoma de Buenos Aires" : (formData.province === "Ciudad Autónoma de Buenos Aires" ? "" : formData.city)
+                });
+              }}
            >
               <option value="" disabled className="text-gray-500">Seleccionar...</option>
               {ARGENTINA_PROVINCES.map(p => (
@@ -141,9 +149,10 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
           <input
             required
             type="text"
-            className={inputClasses}
+            className={`${inputClasses} disabled:opacity-50 disabled:cursor-not-allowed`}
             placeholder="Tu ciudad"
             value={formData.city}
+            disabled={formData.province === "Ciudad Autónoma de Buenos Aires"}
             onChange={(e) => setFormData({...formData, city: e.target.value})}
           />
         </div>

@@ -38,6 +38,32 @@ const imaxStandard = localFont({
 export const metadata: Metadata = {
   title: "Motos LS | Distribución Mayorista",
   description: "Potencia tu negocio con la red de distribución de motos más sólida del país.",
+  icons: {
+    icon: "/images/LOGO1.png",
+    shortcut: "/images/LOGO1.png",
+    apple: "/images/LOGO1.png",
+  },
+  openGraph: {
+    title: "Motos LS | Distribución Mayorista",
+    description: "Potencia tu negocio con la red de distribución de motos más sólida del país. Stock estable y márgenes competitivos.",
+    siteName: "Motos LS",
+    images: [
+      {
+        url: "/images/LOGO1.png",
+        width: 800,
+        height: 600,
+        alt: "Logo Motos LS",
+      },
+    ],
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Motos LS | Distribución Mayorista",
+    description: "Potencia tu negocio con la red de distribución de motos más sólida del país.",
+    images: ["/images/LOGO1.png"],
+  },
 };
 
 export default function RootLayout({

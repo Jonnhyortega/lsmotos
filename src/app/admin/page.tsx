@@ -36,6 +36,7 @@ import { Overlay } from '@/components/ui/Overlay';
 import { logos } from '@/constants/logos';
 import { BrandLoader } from '@/components/ui/BrandLoader';
 import { ConfirmDialog, DialogVariant } from '@/components/ui/ConfirmDialog';
+import { ToastContainer, Toast, ToastType } from '@/components/ui/Toast';
 
 // Types
 interface Customer {
@@ -63,6 +64,16 @@ function AdminPageContent() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  
+  // Toast State
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const addToast = (message: string, type: ToastType = 'info') => {
+    const id = Math.random().toString(36).substring(7);
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
   
   // Dialog State
   const [dialogConfig, setDialogConfig] = useState<{
@@ -378,9 +389,19 @@ function AdminPageContent() {
       });
   };
 
+  const closeDialog = () => {
+    setDialogConfig(prev => ({ ...prev, isOpen: false }));
+  };
+
   return (
     <>
-      <Dashboard onLogout={handleLogout} showDialog={showDialog} />
+      <Dashboard 
+        onLogout={handleLogout} 
+        showDialog={showDialog} 
+        closeDialog={closeDialog}
+        showToast={addToast}
+      />
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       <ConfirmDialog 
         isOpen={dialogConfig.isOpen}
         onClose={() => setDialogConfig(prev => ({ ...prev, isOpen: false }))}
@@ -396,6 +417,8 @@ function AdminPageContent() {
 interface DashboardProps {
     onLogout: () => void;
     showDialog: (config: { title: string; description: string; variant?: DialogVariant; onConfirm?: () => void }) => void;
+    closeDialog: () => void;
+    showToast: (message: string, type: ToastType) => void;
 }
 
 interface EmailLog {
@@ -407,7 +430,7 @@ interface EmailLog {
   date: string;
 }
 
-function Dashboard({ onLogout, showDialog }: DashboardProps) {
+function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -503,16 +526,9 @@ function Dashboard({ onLogout, showDialog }: DashboardProps) {
                 if (res.ok) {
                     setCustomers(prev => prev.filter(c => !idsToDelete.includes(c.id)));
                     setSelectedIds(prev => prev.filter(id => !idsToDelete.includes(id)));
-                    // We don't need to show another dialog for success strictly, but it's nice.
-                    // However, calling showDialog again immediately might conflict if not handled well. 
-                    // But standard react state updates usually batch or replace. 
-                    // Let's just close it by default logic of ConfirmDialog if it auto-closes, 
-                    // but here we are using a custom dialog handler.
-                    // The ConfirmDialog in AdminPage likely stays open until closed.
-                    // Actually checking AdminPageContent, <ConfirmDialog ... onClose={() => setDialogConfig(prev => ({ ...prev, isOpen: false }))} />
-                    // So we might need to manually close it, but onConfirm usually is just an action.
-                    // The ConfirmDialog implementation usually closes itself on confirm? Check ConfirmDialog usage.
-                    // If unsure, I'll assume I can just leave it or show success.
+                    
+                    closeDialog();
+                    showToast('Suscriptor(es) eliminado(s) correctamente.', 'success');
                 } else {
                     showDialog({ title: 'Error', description: 'No se pudieron eliminar los suscriptores.', variant: 'error' });
                 }
