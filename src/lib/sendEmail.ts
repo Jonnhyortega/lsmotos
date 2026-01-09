@@ -13,8 +13,8 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
 
   try {
     const data = await resend.emails.send({
-      from: 'Motos LS <onboarding@resend.dev>', // Use this default for testing until you verify your domain
-      to: to, // Note: In Resend 'Testing' mode, you can only send to the email you signed up with.
+      from: 'Motos LS <soporte@lsmotos.com>',
+      to: to,
       subject: subject,
       html: html,
     });

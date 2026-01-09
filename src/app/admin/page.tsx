@@ -29,7 +29,8 @@ import {
   Instagram, 
   Smartphone, 
   Globe,
-  Music
+  Music,
+  Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Overlay } from '@/components/ui/Overlay';
@@ -46,6 +47,9 @@ interface Customer {
   city: string;
   type: 'Distributor' | 'Newsletter';
   date: string;
+  phone?: string;
+  company?: string;
+  message?: string;
 }
 
 export default function AdminPage() {
@@ -440,6 +444,7 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
   const [viewMode, setViewMode] = useState<'subscribers' | 'logs'>('subscribers');
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [selectedLog, setSelectedLog] = useState<EmailLog | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // For viewing details
 
   const [showMailModal, setShowMailModal] = useState(false);
   const [mailSubject, setMailSubject] = useState('');
@@ -982,7 +987,8 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
                     <td className="p-4 text-right text-white/40 font-mono text-xs">
                       {new Date(customer.date).toLocaleDateString()}
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center flex items-center justify-end gap-2">
+
                       <button 
                         onClick={(e) => { 
                           e.stopPropagation();
@@ -1116,6 +1122,54 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
 
                  <div className="flex justify-end pt-2">
                      <Button variant="ghost" onClick={() => setSelectedLog(null)}>Cerrar</Button>
+                 </div>
+             </div>
+        </Overlay>
+      )}
+
+      {/* CUSTOMER DETAIL MODAL */}
+      {selectedCustomer && (
+        <Overlay isOpen={!!selectedCustomer} onClose={() => setSelectedCustomer(null)} title="Detalle del Suscriptor">
+             <div className="space-y-6">
+                 <div className="flex items-start gap-4 pb-6 border-b border-white/10">
+                    <div className="w-16 h-16 rounded-full bg-ls-accent/10 flex items-center justify-center text-ls-accent text-2xl font-bold">
+                        {selectedCustomer.name.charAt(0)}
+                    </div>
+                    <div>
+                        <h3 className="text-2xl font-bold text-white">{selectedCustomer.name}</h3>
+                        <p className="text-ls-accent">{selectedCustomer.type === 'Distributor' ? 'Distribuidor' : 'Newsletter'}</p>
+                        <p className="text-white/40 text-sm mt-1">Registrado el {new Date(selectedCustomer.date).toLocaleString()}</p>
+                    </div>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase flex items-center gap-2"><Mail size={14}/> Email</h4>
+                         <p className="text-white select-all">{selectedCustomer.email}</p>
+                     </div>
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase flex items-center gap-2"><Smartphone size={14}/> Teléfono</h4>
+                         <p className="text-white select-all">{selectedCustomer.phone || '-'}</p>
+                     </div>
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase flex items-center gap-2"><MapPin size={14}/> Ciudad / Provincia</h4>
+                         <p className="text-white">{selectedCustomer.city || '-'}</p>
+                     </div>
+                     <div>
+                         <h4 className="text-xs font-bold text-white/40 mb-1 uppercase flex items-center gap-2"><Briefcase size={14}/> Empresa / Taller</h4>
+                         <p className="text-white">{selectedCustomer.company || '-'}</p>
+                     </div>
+                 </div>
+
+                 <div>
+                     <h4 className="text-xs font-bold text-white/40 mb-2 uppercase flex items-center gap-2"><MessageSquare size={14}/> Mensaje / Consulta</h4>
+                     <div className="bg-black/20 border border-white/10 rounded-lg p-4 text-white/80 font-mono text-sm whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+                         {selectedCustomer.message || 'Sin mensaje adjunto.'}
+                     </div>
+                 </div>
+
+                 <div className="flex justify-end pt-2">
+                     <Button variant="ghost" onClick={() => setSelectedCustomer(null)}>Cerrar</Button>
                  </div>
              </div>
         </Overlay>

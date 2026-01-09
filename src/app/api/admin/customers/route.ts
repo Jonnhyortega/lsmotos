@@ -18,6 +18,9 @@ export async function GET() {
       city: doc.city || 'N/A',
       type: doc.type,
       date: doc.createdAt.toISOString(),
+      phone: doc.phone || '',
+      company: doc.company || '',
+      message: doc.message || '',
     }));
 
     return NextResponse.json(formattedCustomers);

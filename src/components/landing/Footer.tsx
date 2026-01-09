@@ -124,10 +124,10 @@ export const Footer = () => {
             <div className="lg:col-span-2">
               <h4 className="font-imax font-bold text-lg mb-6 text-ls-accent uppercase">Soporte</h4>
               <ul className="space-y-4">
-                <FooterLink href="#">Preguntas Frecuentes</FooterLink>
+                {/* <FooterLink href="#">Preguntas Frecuentes</FooterLink> */}
                 <FooterLink href="#">Términos y Condiciones</FooterLink>
                 <FooterLink href="#">Política de Privacidad</FooterLink>
-                <FooterLink href="#">Portal de Clientes</FooterLink>
+                {/* <FooterLink href="#">Portal de Clientes</FooterLink> */}
               </ul>
             </div>
   

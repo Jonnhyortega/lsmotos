@@ -11,6 +11,7 @@ import Image from "next/image";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { ThreeBackground } from "@/components/landing/ThreeBackground";
 import { SectionReveal } from "@/components/ui/SectionReveal";
+import { logos } from "@/constants/logos";
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -108,12 +109,12 @@ export default function Home() {
                         className="flex flex-col items-center gap-12"
                     >
                         <div className="text-4xl font-imax font-bold text-white tracking-tighter">
-                            <Image src="/images/LOGO1.png" alt="Logo" width={200} height={200} />
+                            <Image src={logos.skyLogo} alt="Logo" width={200} height={200} />
                         </div>
                         
                         <button 
                             onClick={() => {
-                                window.open('https://wa.me/5492231234567', '_blank');
+                                window.open('https://wa.me/5492984707541', '_blank');
                                 setIsMobileMenuOpen(false);
                             }}
                              className="text-2xl font-bold uppercase rounded-md bg-ls-accent text-black px-12 py-4 hover:bg-white transition-colors tracking-widest"
