@@ -75,15 +75,20 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
 
       if (res.ok) {
         setStatus("success");
+        // Optional: Reset form or keep success state
         router.push('/lsmotos-contact');
       } else {
-        console.error(data.error);
+        console.error("Server Error:", data.error);
         setStatus("error");
+        // Show specific error alert if needed, for now we rely on the button state or a toast
+        alert(`Error: ${data.error || 'No se pudo enviar la solicitud.'}`);
         setTimeout(() => setStatus("idle"), 3000);
       }
     } catch (error) {
       console.error("Submission failed", error);
       setStatus("error");
+      alert("Error de conexión. Por favor intenta nuevamente.");
+      setTimeout(() => setStatus("idle"), 3000);
     }
   };
 

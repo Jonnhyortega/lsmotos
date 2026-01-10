@@ -29,8 +29,8 @@ export async function POST(request: Request) {
        // Ideally we might want to update their info if they re-subscribe?
        // For now, let's just return success saying "Already registered" to not leak info
        return NextResponse.json(
-        { success: true, message: 'Already subscribed' },
-        { status: 200 }
+        { error: 'El correo ya está registrado en nuestra base de datos.' },
+        { status: 409 }
       );
     }
 
