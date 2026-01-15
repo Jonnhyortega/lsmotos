@@ -52,7 +52,7 @@ export async function createProduct(formData: FormData) {
     return { success: true, product: JSON.parse(JSON.stringify(newProduct)) };
   } catch (error) {
     console.error("Error creating product:", error);
-    return { success: false, error: "Error al crear el producto" };
+    return { success: false, error: error instanceof Error ? error.message : "Error al crear el producto" };
   }
 }
 
@@ -126,13 +126,16 @@ export async function updateProduct(formData: FormData) {
         return { success: true };
     } catch (error) {
         console.error("Error updating product:", error);
-        return { success: false, error: "Error al actualizar" };
+        return { success: false, error: error instanceof Error ? error.message : "Error al actualizar" };
     }
 }
 
 export async function deleteProduct(productId: string) {
     try {
         await dbConnect();
+        // Ensure Brand model is registered
+        const _ = Brand;
+        
         const product = await Product.findById(productId);
         if (!product) return { success: false, error: "Producto no encontrado" };
 
@@ -148,7 +151,7 @@ export async function deleteProduct(productId: string) {
         return { success: true };
     } catch (error) {
         console.error("Error deleting product:", error);
-        return { success: false, error: "Error al eliminar" };
+        return { success: false, error: error instanceof Error ? error.message : "Error al eliminar" };
         
     }
 }
