@@ -30,7 +30,8 @@ import {
   Smartphone, 
   Globe,
   Music,
-  Briefcase
+  Briefcase,
+  HelpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Overlay } from '@/components/ui/Overlay';
@@ -38,6 +39,9 @@ import { logos } from '@/constants/logos';
 import { BrandLoader } from '@/components/ui/BrandLoader';
 import { ConfirmDialog, DialogVariant } from '@/components/ui/ConfirmDialog';
 import { ToastContainer, Toast, ToastType } from '@/components/ui/Toast';
+import ProductManager from '@/components/admin/ProductManager';
+import BrandManager from '@/components/admin/BrandManager';
+import { HelpCenter } from '@/components/admin/HelpCenter';
 
 // Types
 interface Customer {
@@ -441,7 +445,7 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
   const [filterType, setFilterType] = useState<'All' | 'Distributor' | 'Newsletter'>('All');
   
   // View Mode
-  const [viewMode, setViewMode] = useState<'subscribers' | 'logs'>('subscribers');
+  const [viewMode, setViewMode] = useState<'subscribers' | 'logs' | 'catalogo' | 'brands'>('subscribers');
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
   const [selectedLog, setSelectedLog] = useState<EmailLog | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // For viewing details
@@ -742,6 +746,9 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
       setPwdVisibility(prev => ({ ...prev, [field]: !prev[field] }));
   }
 
+  // Help Modal State
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-ls-dark text-ls-light p-4 md:p-10 font-sans">
       
@@ -765,6 +772,10 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
           </div>
           
           <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)} title="Centro de Ayuda" className="hover:bg-ls-accent hover:text-ls-dark transition-colors rounded-full w-10 h-10 p-0 flex items-center justify-center">
+                <HelpCircle className="w-5 h-5" />
+            </Button>
+
             <Button variant="ghost" size="sm" onClick={() => setShowSettingsModal(true)} title="Configuración" className="hover:bg-ls-accent hover:text-ls-dark transition-colors">
               <Settings className="w-5 h-5" />
             </Button>
@@ -798,6 +809,22 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
                     }`}
                 >
                     Historial de Correos
+                </button>
+                <button 
+                     onClick={() => setViewMode('catalogo')}
+                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        viewMode === 'catalogo' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    Catálogo
+                </button>
+                 <button 
+                     onClick={() => setViewMode('brands')}
+                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                        viewMode === 'brands' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    Marcas
                 </button>
              </div>
 
@@ -858,7 +885,11 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
         </div>
       </div>
 
-      {viewMode === 'subscribers' ? (
+      {viewMode === 'catalogo' ? (
+        <ProductManager />
+      ) : viewMode === 'brands' ? (
+        <BrandManager />
+      ): viewMode === 'subscribers' ? (
       <>
       {/* MOBILE LIST VIEW (Cards) */}
       <div className="md:hidden space-y-4 mb-8">
@@ -1222,6 +1253,8 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
             onClose={() => setShowSettingsModal(false)}
         />
       </Overlay>
+      {/* Help Center Modal */}
+      <HelpCenter isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
     </div>
   );
 }
