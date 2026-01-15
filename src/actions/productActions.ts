@@ -11,6 +11,8 @@ import { revalidatePath } from "next/cache";
 export async function createProduct(formData: FormData) {
   try {
     await dbConnect();
+    // Ensure Brand model is registered
+    const _ = Brand;
 
     const brandId = formData.get("brandId") as string;
     const modelName = formData.get("model") as string;
@@ -56,6 +58,9 @@ export async function createProduct(formData: FormData) {
 
 export async function getProducts() {
   await dbConnect();
+  // Ensure Brand model is registered (prevents tree-shaking issues in production)
+  const _ = Brand; 
+  
   // Populate brand info
   const products = await Product.find({})
     .populate("brand")
@@ -67,6 +72,8 @@ export async function getProducts() {
 export async function updateProduct(formData: FormData) {
     try {
         await dbConnect();
+        // Ensure Brand model is registered
+        const _ = Brand;
         
         const id = formData.get("id") as string;
         const brandId = formData.get("brandId") as string;
