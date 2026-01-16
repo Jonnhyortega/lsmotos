@@ -24,6 +24,9 @@ export default function ProductManager() {
   // Expanded Groups State
   const [expandedBrands, setExpandedBrands] = useState<Record<string, boolean>>({});
 
+  // Form Collapse State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     brandId: '',
     model: '',
@@ -97,6 +100,7 @@ export default function ProductManager() {
     setPreview(null);
     setIsEditing(false);
     setEditingId(null);
+    setIsFormOpen(false);
   };
 
   const handleEdit = (product: any) => {
@@ -112,6 +116,7 @@ export default function ProductManager() {
       
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsFormOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,90 +228,106 @@ export default function ProductManager() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Formulario */}
-      <div className={`border rounded-xl p-6 transition-colors ${isEditing ? 'bg-ls-accent/5 border-ls-accent' : 'bg-white/5 border-white/10'}`}>
-        <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-ls-accent font-imax uppercase flex items-center gap-2">
-                {isEditing ? <><Pencil className="w-5 h-5" /> Editar Moto</> : <><Plus className="w-5 h-5" /> Agregar Nueva Moto</>}
+      <div className={`border rounded-xl transition-all duration-300 overflow-hidden ${isFormOpen || isEditing ? 'bg-[#1A1A1A] border-ls-accent shadow-lg' : 'bg-[#1A1A1A] border-dashed border-white/20 hover:border-ls-accent/50 cursor-pointer'}`}>
+        <button 
+            type="button"
+            onClick={() => setIsFormOpen(!isFormOpen)}
+            className="w-full flex justify-between items-center p-6 focus:outline-none"
+        >
+            <h2 className={`text-xl font-bold font-imax uppercase flex items-center gap-3 ${isFormOpen || isEditing ? 'text-ls-accent' : 'text-white/60'}`}>
+                {isEditing ? <Pencil className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+                {isEditing ? 'Editar Moto' : 'Agregar Nueva Moto'}
             </h2>
-            {isEditing && (
-                <button onClick={resetForm} className="text-xs flex items-center gap-1 text-gray-400 hover:text-white px-3 py-1 rounded-full bg-white/10 transition-colors">
-                    <X className="w-3 h-3" /> Cancelar Edición
-                </button>
-            )}
-        </div>
-        
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-             <div>
-                <label className="block text-sm text-gray-400 mb-1">Marca</label>
-                <select 
-                    className="w-full p-3 bg-black/20 border border-white/10 rounded-lg text-white focus:border-ls-accent outline-none"
-                    value={formData.brandId}
-                    onChange={e => setFormData({...formData, brandId: e.target.value})}
-                    required
-                >
-                    <option value="" disabled className="text-gray-500">Seleccionar Marca</option>
-                    {brands.length > 0 ? (
-                        brands.map((brand) => (
-                            <option key={brand._id} value={brand._id} className="text-black">{brand.name}</option>
-                        ))
-                    ) : (
-                        <option value="" disabled>No hay marcas creadas</option>
-                    )}
-                </select>
-                {brands.length === 0 && <p className="text-xs text-red-400 mt-1">Primero crea una marca en la pestaña "Gestión de Marcas".</p>}
-             </div>
-             <div>
-                <label className="block text-sm text-gray-400 mb-1">Modelo</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3 bg-black/20 border border-white/10 rounded-lg text-white focus:border-ls-accent outline-none placeholder:text-gray-600"
-                  placeholder="Ej: XR 150"
-                  value={formData.model}
-                  onChange={e => setFormData({...formData, model: e.target.value})}
-                  required
-                />
-             </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Prioridad (Orden del Modelo)</label>
-                <input 
-                  type="number" 
-                  className="w-full p-3 bg-black/20 border border-white/10 rounded-lg text-white focus:border-ls-accent outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  placeholder="0"
-                  value={formData.priority}
-                  onChange={e => setFormData({...formData, priority: Number(e.target.value)})}
-                />
-                <p className="text-xs text-gray-500 mt-1">Mayor número = Aparece antes dentro de su marca.</p>
-             </div>
-          </div>
-
-          <div className="space-y-4">
-            <label className="block text-sm text-gray-400 mb-1">Imagen {isEditing && '(Dejar vacío para mantener actual)'}</label>
-            <div className={`relative border-2 border-dashed border-white/10 rounded-xl h-48 flex flex-col items-center justify-center p-4 transition-colors ${preview ? 'bg-black/40' : 'hover:bg-white/5'}`}>
-               {!preview ? (
-                   <>
-                     <ImageIcon className="w-10 h-10 text-gray-500 mb-2" />
-                     <p className="text-gray-400 text-sm mb-2">Click para subir foto</p>
-                     <input type="file" accept="image/*" onChange={handleFileChange} className="absolute opacity-0 inset-0 cursor-pointer w-full h-full" />
-                   </>
-               ) : (
-                   <div className="relative w-full h-full">
-                       <Image src={preview} alt="Preview" fill className="object-contain" />
-                       <button type="button" onClick={() => {setFile(null); setPreview(null)}} className="absolute top-2 right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600 z-10 transition-colors">
-                           <Trash2 size={16} />
-                       </button>
-                   </div>
-               )}
-            </div>
             
-            <Button type="submit" disabled={isSubmitting} className="w-full mt-4">
-              {isSubmitting ? 
-                  <><Loader2 className="animate-spin mr-2" /> {isEditing ? 'Actualizando...' : 'Subiendo...'}</> 
-                  : <><Plus className="mr-2" /> {isEditing ? 'Guardar Cambios' : 'Agregar al Catálogo'}</>
-              }
-            </Button>
-          </div>
-        </form>
+            <div className="flex items-center gap-4">
+                {isEditing && (
+                    <span 
+                        onClick={(e) => { e.stopPropagation(); resetForm(); }}
+                        className="text-xs flex items-center gap-1 text-red-400 hover:text-red-300 px-3 py-1 rounded-full bg-red-500/10 transition-colors z-10"
+                    >
+                        <X className="w-3 h-3" /> Cancelar Edición
+                    </span>
+                )}
+                {isFormOpen ? <ChevronUp className="text-white/40" /> : <ChevronDown className="text-white/40" />}
+            </div>
+        </button>
+        
+        {isFormOpen && (
+            <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-300">
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-1">Marca</label>
+                        <select 
+                            className="w-full p-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-ls-accent outline-none"
+                            value={formData.brandId}
+                            onChange={e => setFormData({...formData, brandId: e.target.value})}
+                            required
+                        >
+                            <option value="" disabled className="text-gray-500">Seleccionar Marca</option>
+                            {brands.length > 0 ? (
+                                brands.map((brand) => (
+                                    <option key={brand._id} value={brand._id} className="text-black">{brand.name}</option>
+                                ))
+                            ) : (
+                                <option value="" disabled>No hay marcas creadas</option>
+                            )}
+                        </select>
+                        {brands.length === 0 && <p className="text-xs text-red-400 mt-1">Primero crea una marca en la pestaña "Gestión de Marcas".</p>}
+                    </div>
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-1">Modelo</label>
+                        <input 
+                        type="text" 
+                        className="w-full p-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-ls-accent outline-none placeholder:text-gray-600"
+                        placeholder="Ej: XR 150"
+                        value={formData.model}
+                        onChange={e => setFormData({...formData, model: e.target.value})}
+                        required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-gray-400 mb-1">Prioridad (Orden del Modelo)</label>
+                        <input 
+                        type="number" 
+                        className="w-full p-3 bg-black/40 border border-white/10 rounded-lg text-white focus:border-ls-accent outline-none placeholder:text-gray-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="0"
+                        value={formData.priority}
+                        onChange={e => setFormData({...formData, priority: Number(e.target.value)})}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Mayor número = Aparece antes dentro de su marca.</p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <label className="block text-sm text-gray-400 mb-1">Imagen {isEditing && '(Dejar vacío para mantener actual)'}</label>
+                    <div className={`relative border-2 border-dashed border-white/10 rounded-xl h-48 flex flex-col items-center justify-center p-4 transition-colors ${preview ? 'bg-black/40' : 'hover:bg-white/5'}`}>
+                    {!preview ? (
+                        <>
+                            <ImageIcon className="w-10 h-10 text-gray-500 mb-2" />
+                            <p className="text-gray-400 text-sm mb-2">Click para subir foto</p>
+                            <input type="file" accept="image/*" onChange={handleFileChange} className="absolute opacity-0 inset-0 cursor-pointer w-full h-full" />
+                        </>
+                    ) : (
+                        <div className="relative w-full h-full">
+                            <Image src={preview} alt="Preview" fill className="object-contain" />
+                            <button type="button" onClick={() => {setFile(null); setPreview(null)}} className="absolute top-2 right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600 z-10 transition-colors">
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    )}
+                    </div>
+                    
+                    <Button type="submit" disabled={isSubmitting} className="w-full mt-4">
+                    {isSubmitting ? 
+                        <><Loader2 className="animate-spin mr-2" /> {isEditing ? 'Actualizando...' : 'Subiendo...'}</> 
+                        : <><Plus className="mr-2" /> {isEditing ? 'Guardar Cambios' : 'Agregar al Catálogo'}</>
+                    }
+                    </Button>
+                </div>
+                </form>
+            </div>
+        )}
       </div>
 
       {/* Lista Agrupada por Marca */}

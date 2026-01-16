@@ -96,11 +96,11 @@ export default function CatalogPage() {
              <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
                 {/* Search */}
                 <div className="mb-16 relative max-w-xl mx-auto">
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50" />
+                    <Search className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 text-white/50" />
                     <input 
                         type="text" 
                         placeholder="Buscar por marca o modelo..." 
-                        className="w-full pl-12 pr-4 py-4 bg-[#1A1A1A] border border-white/10 rounded-full focus:border-ls-accent focus:outline-none transition-all placeholder:text-white/30 text-lg shadow-2xl"
+                        className="w-full pl-12 pr-4 py-4 bg-[#1A1A1A] border border-white/10 rounded-md focus:border-ls-accent focus:outline-none transition-all placeholder:text-white/30 text-lg shadow-2xl"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -128,7 +128,7 @@ export default function CatalogPage() {
                                     <div className="flex items-end gap-6 mb-10 border-b border-white/10 pb-4">
                                         {/* Logo if available */}
                                         {brand?.logoUrl && (
-                                            <div className="relative w-24 h-16 md:w-32 md:h-20 bg-white/5 rounded-lg p-2 mb-[-8px]">
+                                            <div className="relative w-24 h-16 md:w-32 md:h-20  mb-[-8px]">
                                                 <Image src={brand.logoUrl} alt={brandName} fill className="object-contain" />
                                             </div>
                                         )}

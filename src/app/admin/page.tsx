@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
@@ -31,7 +31,10 @@ import {
   Globe,
   Music,
   Briefcase,
-  HelpCircle
+  HelpCircle,
+  ChevronDown,
+  MoreVertical,
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Overlay } from '@/components/ui/Overlay';
@@ -430,12 +433,16 @@ interface DashboardProps {
 }
 
 interface EmailLog {
-  id: string;
+  _id?: string;
+  id?: string;
   subject: string;
   message: string;
-  recipients: number;
+  recipientsCount?: number; // Updated to match usage in render
+  recipients?: string | number; // Handling flexible type or legacy
+  filterType?: string;
   status: string;
-  date: string;
+  sentAt?: string; // Matching render usage
+  date?: string;   // Legacy
 }
 
 function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardProps) {
@@ -445,8 +452,50 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
   const [filterType, setFilterType] = useState<'All' | 'Distributor' | 'Newsletter'>('All');
   
   // View Mode
-  const [viewMode, setViewMode] = useState<'subscribers' | 'logs' | 'catalogo' | 'brands'>('subscribers');
-  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+  // View Mappings
+  const tabs = [
+    { id: 'subscribers', label: 'Suscriptores', icon: User },
+    { id: 'logs', label: 'Historial', icon: Mail },
+    { id: 'catalogo', label: 'Catálogo', icon: CheckSquare },
+    { id: 'brands', label: 'Marcas', icon: Briefcase }
+  ];
+
+  const [viewMode, setViewMode] = useState<string>('subscribers');
+  const [navOpen, setNavOpen] = useState(false);
+  const [direction, setDirection] = useState(0);
+
+  const getTabIndex = (id: string) => tabs.findIndex(t => t.id === id);
+
+  const handleNavClick = (id: string) => {
+    if (isDraggingRef.current) return;
+    const newDirection = getTabIndex(id) > getTabIndex(viewMode) ? 1 : -1;
+    setDirection(newDirection);
+    setViewMode(id);
+  };
+
+  const swipeConfidenceThreshold = 10000;
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+  };
+
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0
+    })
+  };
+  const [logs, setLogs] = useState<EmailLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
   const [selectedLog, setSelectedLog] = useState<EmailLog | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // For viewing details
 
@@ -454,14 +503,57 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
   const [mailSubject, setMailSubject] = useState('');
   const [mailMessage, setMailMessage] = useState('');
   const [isSendingMail, setIsSendingMail] = useState(false);
+  
+  // Mobile Nav State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Drag Nav State
+  const navRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const [isDown, setIsDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!navRef.current) return;
+    setIsDown(true);
+    isDraggingRef.current = false;
+    setStartX(e.pageX - navRef.current.offsetLeft);
+    setScrollLeft(navRef.current.scrollLeft);
+  };
+  
+  const handleMouseLeave = () => {
+    setIsDown(false);
+    isDraggingRef.current = false;
+  };
+  
+  const handleMouseUp = () => {
+    setIsDown(false);
+    setTimeout(() => { isDraggingRef.current = false; }, 50); 
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDown || !navRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - navRef.current.offsetLeft;
+    const walk = (x - startX) * 2; 
+    if (Math.abs(walk) > 5) {
+        isDraggingRef.current = true;
+    }
+    navRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+
 
   // Fetch Logs
   useEffect(() => {
       if (viewMode === 'logs') {
+          setLoadingLogs(true);
           fetch('/api/admin/emails-log')
             .then(res => res.json())
-            .then(data => setEmailLogs(data))
-            .catch(err => console.error(err));
+            .then(data => setLogs(data))
+            .catch(err => console.error(err))
+            .finally(() => setLoadingLogs(false));
       }
   }, [viewMode]);
 
@@ -788,46 +880,88 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
       </header>
 
       {/* CONTROLS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mb-6 md:mb-8">
-        {/* Search & Filter */}
+      {/* CONTROLS */}
+      {/* 1. Navigation (Full Width) */}
+      <div className="mb-6 md:mb-8">
+         <h2 className="text-[10px] font-bold text-white/40 uppercase tracking-widest pl-1 mb-2">Secciones del Panel</h2>
+         
+         <div className="relative z-50 w-full md:w-[320px]">
+            {/* SELECT TRIGGER */}
+            <button 
+                onClick={() => setNavOpen(!navOpen)}
+                className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition-all duration-300 group ${
+                   navOpen 
+                   ? 'bg-ls-dark border-ls-accent shadow-[0_0_20px_rgba(0,255,255,0.15)]' 
+                   : 'bg-[#1A1A1A] border-white/10 hover:border-ls-accent/50'
+                }`}
+            >
+                <div className="flex items-center gap-3">
+                    {(() => {
+                        const active = tabs.find(t => t.id === viewMode) || tabs[0];
+                        const Icon = active.icon;
+                        return (
+                            <>
+                                <div className={`p-2 rounded-lg ${navOpen ? 'bg-ls-accent/20 text-ls-accent' : 'bg-white/5 text-white/60 group-hover:text-ls-accent group-hover:bg-ls-accent/10'} transition-colors`}>
+                                    <Icon size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <span className="block text-xs text-white/40 font-bold uppercase tracking-wider mb-0.5">Sección Actual</span>
+                                    <span className="block text-white font-bold text-lg leading-none">{active.label}</span>
+                                </div>
+                            </>
+                        );
+                    })()}
+                </div>
+                <div className={`p-2 rounded-full border border-white/5 bg-black/20 text-white/50 transition-transform duration-300 ${navOpen ? 'rotate-180 text-ls-accent border-ls-accent/30' : ''}`}>
+                    <ChevronDown size={20} />
+                </div>
+            </button>
+
+            {/* BACKDROP */}
+            {navOpen && (
+                <div className="fixed inset-0 z-[-1]" onClick={() => setNavOpen(false)}></div>
+            )}
+
+            {/* DROPDOWN OPTIONS */}
+            <AnimatePresence>
+                {navOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full left-0 w-full mt-2 bg-[#151515] border border-white/10 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl ring-1 ring-white/5"
+                    >
+                        <div className="p-2 space-y-1">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                        handleNavClick(tab.id);
+                                        setNavOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${
+                                        viewMode === tab.id
+                                        ? 'bg-ls-accent text-ls-dark font-bold shadow-lg shadow-ls-accent/20'
+                                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                                    }`}
+                                >
+                                    <tab.icon size={18} className={viewMode === tab.id ? 'animate-pulse' : 'opacity-50 group-hover:opacity-100'} />
+                                    <span>{tab.label}</span>
+                                    {viewMode === tab.id && <Check size={16} className="ml-auto" strokeWidth={3} />}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+         </div>
+      </div>
+
+      {/* 2. Filters & Actions Row (Grid) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mb-6 md:mb-8 items-end">
         {/* Search & Filter */}
         <div className="lg:col-span-8 flex flex-col gap-4">
-             {/* View Switcher */}
-             <div className="flex bg-[#1A1A1A] p-1 rounded-lg border border-white/10 w-fit">
-                <button 
-                    onClick={() => setViewMode('subscribers')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                        viewMode === 'subscribers' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
-                    }`}
-                >
-                    Suscriptores
-                </button>
-                <button 
-                     onClick={() => setViewMode('logs')}
-                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                        viewMode === 'logs' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
-                    }`}
-                >
-                    Historial de Correos
-                </button>
-                <button 
-                     onClick={() => setViewMode('catalogo')}
-                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                        viewMode === 'catalogo' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
-                    }`}
-                >
-                    Catálogo
-                </button>
-                 <button 
-                     onClick={() => setViewMode('brands')}
-                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                        viewMode === 'brands' ? 'bg-ls-accent text-ls-dark shadow-sm' : 'text-gray-400 hover:text-white'
-                    }`}
-                >
-                    Marcas
-                </button>
-             </div>
-
           {viewMode === 'subscribers' && (
           <div className="flex flex-col md:flex-row gap-4 w-full">
             <div className="relative flex-1">
@@ -861,7 +995,7 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
         </div>
 
         {/* Action Panel */}
-        <div className="lg:col-span-4 flex justify-end gap-3 h-12">
+        <div className="lg:col-span-4 flex justify-end gap-3 md:h-12 items-center">
           <AnimatePresence>
             {selectedIds.length > 0 && (
               <motion.div 
@@ -885,240 +1019,247 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
         </div>
       </div>
 
-      {viewMode === 'catalogo' ? (
-        <ProductManager />
-      ) : viewMode === 'brands' ? (
-        <BrandManager />
-      ): viewMode === 'subscribers' ? (
-      <>
-      {/* MOBILE LIST VIEW (Cards) */}
-      <div className="md:hidden space-y-4 mb-8">
-        <div className="flex items-center justify-between px-2 mb-2">
-            <h3 className="text-white/40 text-xs uppercase font-bold tracking-wider">Resultados ({filteredCustomers.length})</h3>
-            <button 
-                onClick={toggleSelectAll} 
-                className="flex items-center gap-2 text-xs text-ls-accent uppercase font-bold tracking-wider"
-            >
-                {selectedIds.length === filteredCustomers.length && filteredCustomers.length > 0 ? (
-                    <>Deseleccionar todos <CheckSquare className="w-4 h-4" /></>
-                ) : (
-                    <>Seleccionar todos <Square className="w-4 h-4" /></>
-                )}
-            </button>
-        </div>
 
-        {filteredCustomers.length > 0 ? (
-            filteredCustomers.map((customer) => (
-                <div 
-                    key={customer.id} 
-                    className={`bg-[#1A1A1A] border ${selectedIds.includes(customer.id) ? 'border-ls-accent/50 bg-ls-accent/[0.03]' : 'border-white/5'} rounded-xl p-4 transition-all`}
-                    onClick={() => toggleSelect(customer.id)}
-                >
-                    <div className="flex items-start gap-4">
-                        <div onClick={(e) => { e.stopPropagation(); toggleSelect(customer.id); }} className="mt-1">
-                             {selectedIds.includes(customer.id) ? (
-                                <CheckSquare className="w-6 h-6 text-ls-accent" />
-                            ) : (
-                                <Square className="w-6 h-6 text-white/20" />
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-ls-accent font-bold text-sm shrink-0">
-                                    {customer.name.charAt(0)}
-                                </div>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border uppercase ${
-                                    customer.type === 'Distributor' 
-                                    ? 'bg-ls-accent/10 border-ls-accent text-ls-accent' 
-                                    : 'bg-purple-500/10 border-purple-500 text-purple-400'
-                                }`}>
-                                    {customer.type}
-                                </span>
-                            </div>
-                            
-                            <h4 className="font-semibold text-white truncate text-lg leading-tight mb-1">{customer.name}</h4>
-                            <p className="text-white/50 text-sm truncate mb-3">{customer.email}</p>
-                            
-                            <div className="flex items-center justify-between text-xs text-white/30 border-t border-white/5 pt-3">
-                                <span className="flex items-center gap-1 truncate max-w-[60%]">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-white/20"></span> {customer.city || 'Sin ciudad'}
-                                </span>
-                                <span className="font-mono">{new Date(customer.date).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ))
-        ) : (
-            <div className="text-center py-10 text-white/30 bg-[#1A1A1A] rounded-xl border border-white/5">
-                No se encontraron resultados
-            </div>
-        )}
-      </div>
+      <div className="grid grid-cols-1 overflow-x-hidden min-h-[500px]">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={viewMode}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x);
 
-      {/* DESKTOP TABLE VIEW */}
-      <div className="hidden md:block bg-[#1A1A1A] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-white/40">
-                <th className="p-4 w-12 text-center">
-                  <button onClick={toggleSelectAll} className="opacity-60 hover:opacity-100 transition-opacity">
-                    {selectedIds.length === filteredCustomers.length && filteredCustomers.length > 0 ? (
-                      <CheckSquare className="w-5 h-5 text-ls-accent" />
-                    ) : (
-                      <Square className="w-5 h-5" />
-                    )}
-                  </button>
-                </th>
-                <th className="p-4 font-medium">Usuario</th>
-                <th className="p-4 font-medium">Ubicación</th>
-                <th className="p-4 font-medium">Tipo</th>
-                <th className="p-4 font-medium text-right">Fecha</th>
-                <th className="p-4 w-10"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
-                  <tr 
-                    key={customer.id} 
-                    className={`group transition-colors hover:bg-white/[0.02] ${selectedIds.includes(customer.id) ? 'bg-ls-accent/[0.03]' : ''}`}
-                  >
-                    <td className="p-4 text-center">
-                      <button onClick={() => toggleSelect(customer.id)} className="opacity-40 group-hover:opacity-100 transition-opacity">
-                        {selectedIds.includes(customer.id) ? (
-                          <CheckSquare className="w-5 h-5 text-ls-accent" />
+              if (swipe < -swipeConfidenceThreshold) {
+                const currIdx = getTabIndex(viewMode);
+                if (currIdx < tabs.length - 1) {
+                    setDirection(1);
+                    setViewMode(tabs[currIdx + 1].id);
+                }
+              } else if (swipe > swipeConfidenceThreshold) {
+                const currIdx = getTabIndex(viewMode);
+                if (currIdx > 0) {
+                    setDirection(-1);
+                    setViewMode(tabs[currIdx - 1].id);
+                }
+              }
+            }}
+            className="w-full col-start-1 row-start-1"
+          >
+            {viewMode === 'catalogo' ? (
+                <ProductManager />
+            ) : viewMode === 'brands' ? (
+                <BrandManager />
+            ) : viewMode === 'subscribers' ? (
+                /* Subscribers View Logic - extracted inline to save space/complexity for now but essentially same as before */
+                 <>
+                  {/* MOBILE LIST VIEW (Cards) */}
+                    <div className="md:hidden space-y-4 mb-8">
+                        <div className="flex items-center justify-between px-2 mb-2">
+                            <h3 className="text-white/40 text-xs uppercase font-bold tracking-wider">Resultados ({filteredCustomers.length})</h3>
+                            <button 
+                                onClick={toggleSelectAll} 
+                                className="flex items-center gap-2 text-xs text-ls-accent uppercase font-bold tracking-wider"
+                            >
+                                {selectedIds.length === filteredCustomers.length && filteredCustomers.length > 0 ? (
+                                    <>Deseleccionar todos <CheckSquare className="w-4 h-4" /></>
+                                ) : (
+                                    <>Seleccionar todos <Square className="w-4 h-4" /></>
+                                )}
+                            </button>
+                        </div>
+                        
+                        {filteredCustomers.length > 0 ? (
+                            filteredCustomers.map(customer => (
+                                <motion.div 
+                                    key={customer.id} 
+                                    className={`bg-[#1A1A1A] border rounded-xl overflow-hidden ${
+                                        selectedIds.includes(customer.id) 
+                                        ? 'border-ls-accent shadow-[0_0_15px_rgba(0,255,255,0.1)]' 
+                                        : 'border-white/5'
+                                    }`}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    <div className="p-4" onClick={() => toggleSelect(customer.id)}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex gap-3">
+                                                <div 
+                                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                                                        selectedIds.includes(customer.id) ? 'bg-ls-accent border-ls-accent text-ls-dark' : 'border-white/20'
+                                                    }`}
+                                                >
+                                                    {selectedIds.includes(customer.id) && <Check size={12} strokeWidth={4} />}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-white text-lg leading-none mb-1">{customer.name}</h3>
+                                                    <span className="text-white/40 text-xs">{customer.email}</span>
+                                                </div>
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border ${
+                                                customer.type === 'Distributor' 
+                                                ? 'border-purple-500/30 text-purple-400 bg-purple-500/10' 
+                                                : 'border-blue-500/30 text-blue-400 bg-blue-500/10'
+                                            }`}>
+                                                {customer.type === 'Distributor' ? 'Distribuidor' : 'Newsletter'}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-2 text-xs text-white/60 pt-3 border-t border-white/5">
+                                            <div>
+                                                <span className="block text-white/20 uppercase text-[10px] font-bold">Fecha</span>
+                                                {new Date(customer.date).toLocaleDateString()}
+                                            </div>
+                                            <div>
+                                                <span className="block text-white/20 uppercase text-[10px] font-bold">Estado</span>
+                                                <span className="text-ls-accent">Activo</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))
                         ) : (
-                          <Square className="w-5 h-5" />
+                            <div className="text-center py-12 text-white/30">
+                                <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p>No se encontraron resultados</p>
+                            </div>
                         )}
-                      </button>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-ls-accent font-bold">
-                          {customer.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-white">{customer.name}</div>
-                          <div className="text-sm text-white/50">{customer.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-white/70">{customer.city}</td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                        customer.type === 'Distributor' 
-                          ? 'bg-ls-accent/10 border-ls-accent text-ls-accent' 
-                          : 'bg-purple-500/10 border-purple-500 text-purple-400'
-                      }`}>
-                        {customer.type.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right text-white/40 font-mono text-xs">
-                      {new Date(customer.date).toLocaleDateString()}
-                    </td>
-                    <td className="p-4 text-center flex items-center justify-end gap-2">
+                    </div>
 
-                      <button 
-                        onClick={(e) => { 
-                          e.stopPropagation();
-                          handleDelete([customer.id]); 
-                        }}
-                        className="p-2 hover:bg-red-500/10 rounded-lg text-white/30 hover:text-red-500 transition-colors"
-                        title="Eliminar usuario"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="p-10 text-center text-white/30">
-                    No se encontraron resultados
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* FOOTER STATS */}
-      <div className="mt-6 flex flex-wrap gap-6 text-sm text-white/40 justify-center sm:justify-start">
-        <div className="flex items-center gap-2">
-          <User className="w-4 h-4" />
-          <span>Total: <strong className="text-white">{customers.length}</strong></span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-ls-accent"></span>
-          <span>Distribuidores: <strong className="text-white">{customers.filter(c => c.type === 'Distributor').length}</strong></span>
-        </div>
-      </div>
-      </>
-      ) : (
-        // EMAIL LOGS VIEW
-        <div className="space-y-6">
-            <div className="bg-[#1A1A1A] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-white/5 bg-white/[0.02] text-xs uppercase tracking-wider text-white/40">
-                                <th className="p-4 font-medium">Asunto</th>
-                                <th className="p-4 font-medium text-center">Destinatarios</th>
-                                <th className="p-4 font-medium">Estado</th>
-                                <th className="p-4 font-medium text-right">Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {emailLogs.length > 0 ? (
-                                emailLogs.map((log) => (
+                    {/* DESKTOP TABLE VIEW */}
+                    <div className="hidden md:block bg-[#1A1A1A] border border-white/5 rounded-2xl overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-white/5 text-white/40 text-xs uppercase tracking-wider">
+                                    <th className="p-4 w-12">
+                                        <button onClick={toggleSelectAll} className="hover:text-white transition-colors">
+                                            {selectedIds.length === filteredCustomers.length && filteredCustomers.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
+                                        </button>
+                                    </th>
+                                    <th className="p-4 font-bold">Usuario</th>
+                                    <th className="p-4 font-bold">Tipo</th>
+                                    <th className="p-4 font-bold">Estado</th>
+                                    <th className="p-4 font-bold">Fecha</th>
+                                    <th className="p-4 font-bold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {filteredCustomers.length > 0 ? (
+                                    filteredCustomers.map((customer) => (
                                     <tr 
-                                        key={log.id} 
-                                        className="hover:bg-white/[0.02] transition-colors cursor-pointer group"
-                                        onClick={() => setSelectedLog(log)}
+                                        key={customer.id} 
+                                        className={`group transition-all duration-200 ${
+                                            selectedIds.includes(customer.id) ? 'bg-ls-accent/5' : 'hover:bg-white/5'
+                                        }`}
+                                        onClick={() => toggleSelect(customer.id)}
                                     >
                                         <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                                                    <Mail size={16} />
-                                                </div>
-                                                <span className="font-semibold text-white">{log.subject}</span>
+                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                                                selectedIds.includes(customer.id) ? 'bg-ls-accent border-ls-accent text-ls-dark' : 'border-white/20 group-hover:border-white/50'
+                                            }`}>
+                                                {selectedIds.includes(customer.id) && <Check size={10} strokeWidth={4} />}
                                             </div>
                                         </td>
-                                        <td className="p-4 text-center text-white/70">{log.recipients}</td>
                                         <td className="p-4">
-                                            <span className="px-2 py-1 rounded-full text-[10px] font-bold border uppercase bg-green-500/10 border-green-500 text-green-400">
-                                                {log.status}
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center text-ls-accent font-bold text-xs ring-1 ring-white/10">
+                                                    {customer.name.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-white group-hover:text-ls-accent transition-colors">{customer.name}</div>
+                                                    <div className="text-xs text-white/40">{customer.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold border ${
+                                                customer.type === 'Distributor' 
+                                                ? 'border-purple-500/30 text-purple-400 bg-purple-500/5' 
+                                                : 'border-blue-500/30 text-blue-400 bg-blue-500/5'
+                                            }`}>
+                                                {customer.type === 'Distributor' ? 'Distribuidor' : 'Newsletter'}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-right text-white/40 font-mono text-xs">
-                                            {new Date(log.date).toLocaleString()}
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                                <span className="text-green-500 text-xs font-bold">Activo</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-white/60 text-sm font-mono">
+                                            {new Date(customer.date).toLocaleDateString()}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <MoreVertical size={16} />
+                                            </Button>
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="p-16 text-center text-white/30">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <Mail size={40} className="opacity-50" />
-                                            <p>No hay historial de correos enviados.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} className="p-12 text-center text-white/30">
+                                            No se encontraron resultados para tu búsqueda.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                 </>
+            ) : (
+                /* LOGS VIEW */
+                <div className="bg-[#1A1A1A] p-2 md:p-6 rounded-2xl border border-white/5 space-y-4">
+                    <h3 className="text-xl font-bold font-imax text-white mb-4 pl-2">Historial de Correos Enviados</h3>
+                    <div className="space-y-3">
+                        {loadingLogs ? (
+                            <p className="text-white/40 text-center py-10">Cargando historial...</p>
+                        ) : logs.length > 0 ? (
+                            logs.map((log, index) => (
+                                <div 
+                                    key={log._id || log.id || index} 
+                                    className="p-4 rounded-xl bg-black/20 border border-white/5 hover:border-ls-accent/30 transition-all group cursor-pointer"
+                                    onClick={() => setSelectedLog(log)}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-white group-hover:text-ls-accent transition-colors">{log.subject}</h4>
+                                        <span className="text-xs text-white/40 font-mono">
+                                            {new Date(log.sentAt || log.date || Date.now()).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <p className="text-white/60 text-sm line-clamp-2 mb-3">{log.message}</p>
+                                    <div className="flex items-center gap-4 text-xs font-mono text-white/30 border-t border-white/5 pt-3">
+                                        <span className="flex items-center gap-1">
+                                            <User size={12} /> {log.recipientsCount || log.recipients || 0} Destinatarios
+                                        </span>
+                                        {log.filterType && (
+                                            <span className="flex items-center gap-1">
+                                                <Filter size={12} /> {log.filterType}
+                                            </span>
+                                        )}
+                                        <span className={`px-2 py-0.5 rounded ${log.status === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'} ml-auto`}>
+                                            {log.status === 'success' ? 'Enviado' : 'Fallido'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-white/40 text-center py-10">No hay registros de correos enviados.</p>
+                        )}
+                    </div>
                 </div>
-            </div>
-            {/* Disclaimer */}
-            <p className="text-xs text-white/20 text-center italic">
-                * El historial muestra los correos enviados recientemente. Haga clic en una fila para ver el detalle.
-            </p>
-        </div>
-      )}
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
       {/* EMAIL DETAIL MODAL */}
       {selectedLog && (
@@ -1132,11 +1273,11 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
                  <div className="flex gap-8 border-b border-white/10 pb-4">
                      <div>
                          <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Destinatarios</h4>
-                         <p className="text-white">{selectedLog.recipients}</p>
+                         <p className="text-white">{selectedLog.recipientsCount || selectedLog.recipients || 0}</p>
                      </div>
                      <div>
                          <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Fecha</h4>
-                         <p className="text-white">{new Date(selectedLog.date).toLocaleString()}</p>
+                         <p className="text-white">{new Date(selectedLog.sentAt || selectedLog.date || Date.now()).toLocaleString()}</p>
                      </div>
                      <div>
                          <h4 className="text-xs font-bold text-white/40 mb-1 uppercase">Estado</h4>
@@ -1455,10 +1596,7 @@ function SettingsContent({ adminEmail, onClose }: { adminEmail: string, onClose:
         setPwdVisibility(prev => ({ ...prev, [field]: !prev[field] }));
     }
 
-    // New imports for Chevron
-    const ChevronDown = ({ className }: {className?: string}) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6"/></svg>
-    )
+
 
     return (
         <div className="space-y-4">

@@ -84,6 +84,7 @@ export function HelpCenter({ isOpen, onClose }: HelpCenterProps) {
 
                 <div className="pt-4 border-t border-white/10 text-center">
                     <p className="text-xs text-white/30 italic">Sistema desarrollado para LS Motos v1.0</p>
+                    <small className="text-xs text-white/30 italic">Para soporte por algun error comunicarse con el desarrollador +541122684234</small>
                 </div>
             </div>
         </Overlay>
