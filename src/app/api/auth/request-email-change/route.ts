@@ -56,7 +56,11 @@ export async function POST(req: Request) {
     await owner.save();
 
     // 6. Send Verification Email
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const host = req.headers.get('host');
+    const defaultProto = host && host.includes('localhost') ? 'http' : 'https';
+    const proto = req.headers.get('x-forwarded-proto') || defaultProto;
+    const reqBaseUrl = host ? `${proto}://${host}` : 'https://lsmotos.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || reqBaseUrl;
     const verifyUrl = `${baseUrl}/admin?verify_email_token=${changeToken}`;
 
     const message = `

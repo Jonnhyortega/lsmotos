@@ -26,9 +26,12 @@ export async function POST(req: Request) {
     await owner.save();
 
     // Create Reset Link
-    // Assumes localhost or vercel URL. In prod better to use process.env.NEXT_PUBLIC_APP_URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const resetUrl = `${baseUrl}/admin/reset-password?token=${resetToken}`;
+    const host = req.headers.get('host');
+    const defaultProto = host && host.includes('localhost') ? 'http' : 'https';
+    const proto = req.headers.get('x-forwarded-proto') || defaultProto;
+    const reqBaseUrl = host ? `${proto}://${host}` : 'https://lsmotos.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || reqBaseUrl;
+    const resetUrl = `${baseUrl}/admin?token=${resetToken}`;
 
     const message = `
       <h1>Recuperación de Contraseña</h1>

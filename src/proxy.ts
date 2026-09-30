@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 
 const allowedOrigins = [
   'https://www.lsmotos.com',
+  'https://lsmotos.com',
   'https://lsmotos.vercel.app',
   'http://localhost:3000'
 ];
