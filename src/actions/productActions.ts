@@ -5,11 +5,17 @@ import dbConnect from "@/lib/db";
 import Product from "@/models/Product";
 import Brand from "@/models/Brand"; // Ensure Brand model is registered
 import { revalidatePath } from "next/cache";
+import { verifyAuth } from "@/lib/auth";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function createProduct(formData: FormData) {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return { success: false, error: "No autorizado" };
+    }
+
     await dbConnect();
     // Ensure Brand model is registered
     const _ = Brand;
@@ -71,6 +77,11 @@ export async function getProducts() {
 
 export async function updateProduct(formData: FormData) {
     try {
+        const isAuth = await verifyAuth();
+        if (!isAuth) {
+          return { success: false, error: "No autorizado" };
+        }
+
         await dbConnect();
         // Ensure Brand model is registered
         const _ = Brand;
@@ -132,6 +143,11 @@ export async function updateProduct(formData: FormData) {
 
 export async function deleteProduct(productId: string) {
     try {
+        const isAuth = await verifyAuth();
+        if (!isAuth) {
+          return { success: false, error: "No autorizado" };
+        }
+
         await dbConnect();
         // Ensure Brand model is registered
         const _ = Brand;

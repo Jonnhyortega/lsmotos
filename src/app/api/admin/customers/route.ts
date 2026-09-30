@@ -2,11 +2,17 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Customer from '@/models/Customer';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     
     // Fetch all customers, sorted by newest first
@@ -74,6 +80,11 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     const { ids } = await request.json();
     console.log("DELETE request received for IDs:", ids);

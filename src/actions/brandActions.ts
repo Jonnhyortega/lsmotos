@@ -5,11 +5,17 @@ import dbConnect from "@/lib/db";
 import Brand from "@/models/Brand";
 import { revalidatePath } from "next/cache";
 import { normalizeBrandName } from "@/lib/utils";
+import { verifyAuth } from "@/lib/auth";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function createBrand(formData: FormData) {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return { success: false, error: "No autorizado" };
+    }
+
     await dbConnect();
 
     const rawName = formData.get("name") as string;
@@ -69,6 +75,11 @@ export async function getBrands() {
 
 export async function deleteBrand(brandId: string) {
     try {
+        const isAuth = await verifyAuth();
+        if (!isAuth) {
+          return { success: false, error: "No autorizado" };
+        }
+
         await dbConnect();
         
         // TODO: Check if products depend on this brand? 

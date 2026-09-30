@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import EmailLog from '@/models/EmailLog';
+import { verifyAuth } from '@/lib/auth';
 
 export async function GET() {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     
     // Fetch logs from DB, sorted by date desc

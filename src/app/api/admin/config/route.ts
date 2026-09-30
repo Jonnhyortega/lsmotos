@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import SiteConfig from '@/models/SiteConfig';
+import { verifyAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     const body = await request.json();
 
