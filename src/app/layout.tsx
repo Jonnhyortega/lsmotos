@@ -36,6 +36,7 @@ const imaxStandard = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://lsmotos.com'),
   title: "Motos LS | Distribución Mayorista",
   description: "Potencia tu negocio con la red de distribución de motos más sólida del país.",
   icons: {
