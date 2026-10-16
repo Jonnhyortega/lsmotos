@@ -37,8 +37,23 @@ const imaxStandard = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://lsmotos.com'),
-  title: "Motos LS | Distribución Mayorista",
+  title: {
+    default: "Motos LS | Distribución Mayorista de Motos",
+    template: "%s | Motos LS",
+  },
   description: "Potencia tu negocio con la red de distribución de motos más sólida del país.",
+  applicationName: "Motos LS",
+  keywords: ["motos LS", "motos por mayor", "distribuidor de motos", "motos mayorista Argentina", "concesionarios de motos", "reventa de motos"],
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  // Set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in Vercel to verify ownership in Search Console
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
   icons: {
     icon: "/images/LOGO1.png",
     shortcut: "/images/LOGO1.png",
@@ -48,6 +63,7 @@ export const metadata: Metadata = {
     title: "Motos LS | Distribución Mayorista",
     description: "Potencia tu negocio con la red de distribución de motos más sólida del país. Stock estable y márgenes competitivos.",
     siteName: "Motos LS",
+    url: "/",
     images: [
       {
         url: "/images/LOGO1.png",
@@ -65,6 +81,16 @@ export const metadata: Metadata = {
     description: "Potencia tu negocio con la red de distribución de motos más sólida del país.",
     images: ["/images/LOGO1.png"],
   },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Motos LS",
+  url: "https://lsmotos.com",
+  logo: "https://lsmotos.com/images/LOGO1.png",
+  description: "Distribución mayorista de motos para concesionarios y revendedores de todo el país.",
+  areaServed: "AR",
 };
 
 export default function RootLayout({
@@ -86,6 +112,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         />
       </head>
       <body className={`${imaxStandard.variable} ${poppins.variable} ${raleway.variable} antialiased bg-ls-dark text-ls-light font-sans`}>
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-5XMSKTZH"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         <Providers>
             {children}
         </Providers>

@@ -1,44 +1,24 @@
 import type { MetadataRoute } from 'next';
 
+const baseUrl = 'https://lsmotos.com';
+
+// Only indexable pages belong here: the thank-you page and the /landing/* design
+// variants are marked noindex, so listing them would only confuse Search Console.
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://lsmotos.com';
+  const lastModified = new Date();
 
   return [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/catalogo`,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'daily',
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/lsmotos-contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/landing/option1`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/landing/option2`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/landing/option3`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
     },
   ];
 }
