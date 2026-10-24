@@ -957,10 +957,10 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
          </div>
       </div>
 
-      {/* 2. Filters & Actions Row (Grid) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mb-6 md:mb-8 items-end">
+      {/* 2. Filters & Actions Row: actions sit beside the search on wide screens, wrap below otherwise */}
+      <div className="flex flex-col xl:flex-row xl:items-end gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Search & Filter */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
+        <div className="flex-1 min-w-0 flex flex-col gap-4">
           {viewMode === 'subscribers' && (
           <div className="flex flex-col md:flex-row gap-4 w-full">
             <div className="relative flex-1">
@@ -994,25 +994,25 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
         </div>
 
         {/* Action Panel */}
-        <div className="lg:col-span-4 flex justify-end gap-3 md:h-12 items-center">
+        <div className="empty:hidden xl:shrink-0 flex justify-end items-center">
           <AnimatePresence>
             {selectedIds.length > 0 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex gap-2 w-full md:w-auto"
+                className="flex flex-wrap gap-2 w-full sm:w-auto"
               >
 
-                <Button variant="secondary" onClick={exportToCSV} className="gap-2 flex-1 md:flex-none justify-center">
+                <Button variant="secondary" onClick={exportToCSV} className="gap-2 flex-1 sm:flex-none justify-center whitespace-nowrap">
                   <Download className="w-4 h-4" />
                   <span className="inline">Exportar Excel</span>
                 </Button>
-                <Button variant="primary" onClick={() => setShowMailModal(true)} className="gap-2 flex-1 md:flex-none justify-center">
+                <Button variant="primary" onClick={() => setShowMailModal(true)} className="gap-2 flex-1 sm:flex-none justify-center whitespace-nowrap">
                   <Send className="w-4 h-4" />
                   <span className="inline">Mensaje</span>
                 </Button>
-                <Button variant="danger" onClick={() => handleDelete(selectedIds)} className="gap-2 flex-1 md:flex-none justify-center">
+                <Button variant="danger" onClick={() => handleDelete(selectedIds)} className="gap-2 flex-1 sm:flex-none justify-center whitespace-nowrap">
                   <Trash2 className="w-4 h-4" />
                   <span className="inline">Eliminar ({selectedIds.length})</span>
                 </Button>
