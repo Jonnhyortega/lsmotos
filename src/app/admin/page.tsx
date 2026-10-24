@@ -996,7 +996,7 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
         {/* Action Panel */}
         <div className="empty:hidden xl:shrink-0 flex justify-end items-center">
           <AnimatePresence>
-            {selectedIds.length > 0 && (
+            {viewMode === 'subscribers' && selectedIds.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
