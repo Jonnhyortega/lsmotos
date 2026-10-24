@@ -4,8 +4,8 @@ import connectDB from '@/lib/db';
 import Owner from '@/models/Owner';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/auth';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     // Create JWT
     const token = jwt.sign(
       { userId: owner._id, email: owner.email },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '1d' }
     );
 

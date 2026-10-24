@@ -2,10 +2,10 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Owner from '@/models/Owner';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 
 export async function GET() {
   try {
@@ -17,7 +17,7 @@ export async function GET() {
     }
 
     // Verify Token
-    const decoded = jwt.verify(token.value, JWT_SECRET) as any;
+    const decoded = jwt.verify(token.value, getJwtSecret()) as any;
     
     await connectDB();
     const owner = await Owner.findById(decoded.userId).select('email');

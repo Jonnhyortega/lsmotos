@@ -4,6 +4,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface ICustomer extends Document {
   name: string;
   email: string;
+  emailNormalized?: string;
   city: string;
   phone?: string;
   company?: string;
@@ -15,6 +16,7 @@ export interface ICustomer extends Document {
 const CustomerSchema: Schema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  emailNormalized: { type: String, required: false, index: true },
   city: { type: String, required: false, default: '' },
   phone: { type: String, required: false },
   company: { type: String, required: false },

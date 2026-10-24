@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Owner from '@/models/Owner';
 import crypto from 'crypto';
 import { sendEmail } from '@/lib/sendEmail';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const decoded = jwt.verify(token.value, JWT_SECRET) as any;
+    const decoded = jwt.verify(token.value, getJwtSecret()) as any;
     
     await connectDB();
     const owner = await Owner.findById(decoded.userId);

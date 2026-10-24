@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import { Turnstile } from "@/components/ui/Turnstile";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
@@ -22,6 +23,12 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
     province: ""
   });
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+
+  // Anti-spam: honeypot value, form load time and captcha token
+  const [website, setWebsite] = useState("");
+  const [startedAt] = useState(() => Date.now());
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const router = useRouter();
 
@@ -67,7 +74,10 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
           company: formData.company,
           message: formData.message,
           city: formData.province ? `${formData.city} (${formData.province})` : formData.city, // Combine for backend
-          type: 'Distributor' 
+          type: 'Distributor',
+          website,
+          startedAt,
+          turnstileToken
         })
       });
 
@@ -80,6 +90,7 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
       } else {
         console.error("Server Error:", data.error);
         setStatus("error");
+        setTurnstileResetKey(k => k + 1);
         // Show specific error alert if needed, for now we rely on the button state or a toast
         alert(`Error: ${data.error || 'No se pudo enviar la solicitud.'}`);
         setTimeout(() => setStatus("idle"), 3000);
@@ -175,8 +186,9 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 opacity-80">Teléfono <span className="text-xs opacity-50">(Opcional)</span></label>
+            <label className="block text-sm font-medium mb-2 opacity-80">Teléfono <span className="text-ls-accent">*</span></label>
             <input
+              required
               type="tel"
               className={inputClasses}
               placeholder="+54 11 ..."
@@ -197,8 +209,25 @@ export const ContactForm = ({ variant = "dark", buttonText = "SOLICITAR ALTA DE 
         />
       </div>
 
+      {/* Honeypot: hidden from people, bots fill it in */}
+      <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
+        <label>
+          Sitio web
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+        </label>
+      </div>
+
+      <Turnstile onToken={setTurnstileToken} resetKey={turnstileResetKey} />
+
       <div className="pt-4">
-        <Button 
+        <Button
           type="submit" 
           disabled={status === "submitting" || status === "success"}
           className="w-full"

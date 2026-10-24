@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Customer from '@/models/Customer';
 import { sendEmail } from '@/lib/sendEmail';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 
 export async function POST(req: Request) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        jwt.verify(token.value, JWT_SECRET);
+        jwt.verify(token.value, getJwtSecret());
     } catch (e) {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

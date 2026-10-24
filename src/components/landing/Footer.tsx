@@ -6,12 +6,19 @@ import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, ArrowRight, Check, 
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { logos } from "@/constants/logos";
+import { Turnstile } from "@/components/ui/Turnstile";
 
 export const Footer = () => {
     const [email, setEmail] = useState("");
     const [name, setName] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-    
+
+    // Anti-spam: honeypot value, load time and captcha token
+    const [website, setWebsite] = useState("");
+    const [startedAt] = useState(() => Date.now());
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+
     // Dynamic Config State
     const [config, setConfig] = useState({
       whatsapp: '',
@@ -69,10 +76,16 @@ export const Footer = () => {
           body: JSON.stringify({
             email,
             name,
-            type: 'Newsletter'
+            type: 'Newsletter',
+            website,
+            startedAt,
+            turnstileToken
           })
         });
-  
+
+        // Tokens are single-use: get a fresh one for the next submit
+        setTurnstileResetKey(k => k + 1);
+
         if (res.ok) {
           setStatus("success");
           setEmail("");
@@ -210,6 +223,18 @@ export const Footer = () => {
                             )}
                         </button>
                     </div>
+                    {/* Honeypot: hidden from people, bots fill it in */}
+                    <input
+                        type="text"
+                        name="website"
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        className="absolute -left-[9999px] w-px h-px opacity-0"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                    />
+                    <Turnstile onToken={setTurnstileToken} resetKey={turnstileResetKey} />
                   </div>
               </div>
             </div>

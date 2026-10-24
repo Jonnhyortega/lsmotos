@@ -33,7 +33,6 @@ import {
   Briefcase,
   HelpCircle,
   ChevronDown,
-  MoreVertical,
   Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1013,6 +1012,10 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
                   <Send className="w-4 h-4" />
                   <span className="inline">Mensaje</span>
                 </Button>
+                <Button variant="danger" onClick={() => handleDelete(selectedIds)} className="gap-2 flex-1 md:flex-none justify-center">
+                  <Trash2 className="w-4 h-4" />
+                  <span className="inline">Eliminar ({selectedIds.length})</span>
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1198,8 +1201,19 @@ function Dashboard({ onLogout, showDialog, closeDialog, showToast }: DashboardPr
                                             {new Date(customer.date).toLocaleDateString()}
                                         </td>
                                         <td className="p-4 text-right">
-                                            <Button size="sm" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <MoreVertical size={16} />
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                title="Eliminar suscriptor"
+                                                aria-label={`Eliminar ${customer.name}`}
+                                                className="opacity-40 group-hover:opacity-100 hover:text-red-400 transition-opacity"
+                                                onClick={(e) => {
+                                                    // Don't toggle the row selection
+                                                    e.stopPropagation();
+                                                    handleDelete([customer.id]);
+                                                }}
+                                            >
+                                                <Trash2 size={16} />
                                             </Button>
                                         </td>
                                     </tr>

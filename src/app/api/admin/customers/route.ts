@@ -43,6 +43,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const isAuth = await verifyAuth();
+    if (!isAuth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await connectDB();
     const body = await request.json();
     
